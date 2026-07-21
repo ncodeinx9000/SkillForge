@@ -1,0 +1,6 @@
+bash
+# create a .gitignore file with at least:
+node_modules/
+.env
+dist/
+build/

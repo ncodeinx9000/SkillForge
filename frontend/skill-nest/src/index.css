@@ -1,0 +1,29 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Outfit:wght@100..900&display=swap');
+
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  
+}
+
+
+
+
+
+
+@theme{
+
+  --color-primary: #c4622a;
+
+  --font-Outfit: "Outfit", sans-serif;
+
+  --font-DM-Sans: "DM Sans", sans-serif;
+}
