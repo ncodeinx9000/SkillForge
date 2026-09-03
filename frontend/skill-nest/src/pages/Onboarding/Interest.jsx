@@ -1,19 +1,29 @@
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+
 import OnboardingLayout from "../../components/onboarding/OnboardingLayout";
 import OptionSelector from "../../components/onboarding/OptionSelector";
 import businessInterests from "../../data/businessInterests";
-import { useDispatch } from "react-redux";
+import api from "../../lib/axios";
 import { updateUser } from "../../redux/userSlice";
 
 function Interest() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const [selectedInterests, setSelectedInterests] = useState([]);
+
   const handleInterest = async () => {
+    if (selectedInterests.length === 0) {
+      return;
+    }
+
     try {
-      const res = await axios.post(
-        "https://localhost:3000/api/onboarding/interest",
+      const res = await api.put(
+        "/api/onboarding/interests",
         {
-          Interest: selectedSkills,
+          interests: selectedInterests,
         },
         {
           withCredentials: true,
@@ -21,8 +31,12 @@ function Interest() {
       );
 
       dispatch(updateUser(res.data.user));
-    } catch (error) {}
+      navigate("/onboarding/budget");
+    } catch (error) {
+      console.log(error);
+    }
   };
+
   return (
     <OnboardingLayout
       currentStep={2}
@@ -31,9 +45,13 @@ function Interest() {
       title="What are your main interests"
       subtitle="Select all that apply"
       onBack={() => navigate("/onboarding/skills")}
-      onNext={() => navigate("/onboarding/budget")}
+      onNext={handleInterest}
     >
-      <OptionSelector options={businessInterests} />
+      <OptionSelector
+        options={businessInterests}
+        value={selectedInterests}
+        onChange={setSelectedInterests}
+      />
     </OnboardingLayout>
   );
 }

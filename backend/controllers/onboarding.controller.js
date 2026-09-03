@@ -1,4 +1,4 @@
-import { User } from "../models/user.model.js";
+﻿import { User } from "../models/user.model.js";
 
 export const saveSkill = async (req, res) => {
   try {
@@ -24,7 +24,11 @@ export const saveSkill = async (req, res) => {
       });
     }
 
-    res.json({ success: true, message: "Skills saved successfully", user });
+    res.json({
+      success: true,
+      message: "Skills saved successfully",
+      user,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -37,7 +41,11 @@ export const saveInterests = async (req, res) => {
   try {
     const { interests } = req.body;
 
-    if (!interests || Array.isArray(interests) || interests.length === 0) {
+    if (
+      !interests ||
+      !Array.isArray(interests) ||
+      interests.length === 0
+    ) {
       return res.status(400).json({
         success: false,
         message: "Interest are required and must be an array",
@@ -88,7 +96,7 @@ export const saveBudget = async (req, res) => {
     );
 
     if (!user) {
-      res.json({
+      return res.json({
         success: false,
         user,
       });
@@ -96,7 +104,7 @@ export const saveBudget = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Interests saved successfully",
+      message: "budget saved successfully",
       user,
     });
   } catch (error) {
@@ -111,7 +119,10 @@ export const saveLocation = async (req, res) => {
   const { location } = req.body;
 
   if (!location) {
-    return res.json({ success: false, message: "location is required" });
+    return res.json({
+      success: false,
+      message: "location is required",
+    });
   }
 
   const user = await User.findByIdAndUpdate(

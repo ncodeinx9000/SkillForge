@@ -25,7 +25,7 @@ function SignIn() {
     e.preventDefault();
     try {
       const res = await api.post(
-        "/auth/login",
+        "/api/auth/login",
         {
           email,
           password,

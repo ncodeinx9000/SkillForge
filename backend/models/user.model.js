@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -22,6 +22,37 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+    },
+
+    profilePicture: {
+      type: String,
+      default: "",
+    },
+
+    phoneNumber: {
+      type: String,
+      default: "",
+    },
+
+    bio: {
+      type: String,
+      default: "",
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+
+    selectedBusinessIdea: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BusinessIdea",
+      default: null,
     },
 
     skills: {

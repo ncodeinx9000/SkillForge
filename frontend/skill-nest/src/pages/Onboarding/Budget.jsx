@@ -1,18 +1,29 @@
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+
 import OnboardingLayout from "../../components/onboarding/OnboardingLayout";
 import OptionSelector from "../../components/onboarding/OptionSelector";
 import budgets from "../../data/budgets";
-import { useDispatch } from "react-redux";
+import api from "../../lib/axios";
+import { updateUser } from "../../redux/userSlice";
 
 function Budget() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const [selectedBudget, setSelectedBudget] = useState("");
+
   const handleBudget = async () => {
+    if (!selectedBudget) {
+      return;
+    }
+
     try {
-      const res = await axios.post(
-        "https://localhost:3000/api/onboarding/budget",
+      const res = await api.put(
+        "/api/onboarding/budget",
         {
-          Interest: selectedSkills,
+          budget: selectedBudget,
         },
         {
           withCredentials: true,
@@ -20,21 +31,28 @@ function Budget() {
       );
 
       dispatch(updateUser(res.data.user));
+      navigate("/onboarding/location");
     } catch (error) {
       console.log(error);
     }
   };
+
   return (
     <OnboardingLayout
-      currentStep={2}
+      currentStep={3}
       totalSteps={4}
-      stepTitle="STEP 3 OF 4 - INTERESTS"
+      stepTitle="STEP 3 OF 4 - BUDGET"
       title="What's your budget range"
       subtitle="Select your comfortable investment range"
-      onBack={() => navigate("/onboarding//interests")}
-      onNext={() => navigate("/onboarding/location")}
+      onBack={() => navigate("/onboarding/interests")}
+      onNext={handleBudget}
     >
-      <OptionSelector options={budgets} />
+      <OptionSelector
+        options={budgets}
+        value={selectedBudget}
+        onChange={setSelectedBudget}
+        multiple={false}
+      />
     </OnboardingLayout>
   );
 }

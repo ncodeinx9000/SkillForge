@@ -31,7 +31,7 @@ function SignUp() {
 
       console.log(res.data);
 
-      navigate("/onboarding/onboarding");
+      navigate("/onboarding");
     } catch (error) {
       console.log(error);
     }
