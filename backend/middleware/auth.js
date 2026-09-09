@@ -6,19 +6,23 @@ export const isAuthenticated = async (req, res, next) => {
 
     if (!token) {
       return res.status(401).json({
-        sucess: false,
+        success: false,
         message: "Please login first",
       });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.userId = decoded.userId;
+    req.userId = decoded.id;
 
     next();
   } catch (error) {
-    res.status(401).json({
-      sucess: false,
+
+    console.error("Authentication error:", error);
+
+
+    return res.status(401).json({
+      success: false,
       message: "Invalid Token",
     });
   }

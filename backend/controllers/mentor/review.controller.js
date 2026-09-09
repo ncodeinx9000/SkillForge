@@ -1,4 +1,4 @@
-import { Review } from "../../models/review.model.js";
+import { Review } from "../../models/Review.model.js";
 import { Mentor } from "../../models/mentor.model.js";
 import { Session } from "../../models/session.model.js";
 import { Notification } from "../../models/notification.model.js";

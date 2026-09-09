@@ -1,9 +1,30 @@
 import express from "express";
+
 import { isAuthenticated } from "../middleware/auth.js";
-import { getMyProgress } from "../controllers/progress.controller.js";
+
+import {
+  getMyProgress,
+  toggleTaskCompletion,
+} from "../controllers/progress.controller.js";
+
 
 const progressRouter = express.Router();
 
-progressRouter.get("/my-progress", isAuthenticated, getMyProgress);
+
+// Get learner progress
+progressRouter.get(
+  "/my-progress",
+  isAuthenticated,
+  getMyProgress
+);
+
+
+// Toggle task completion
+progressRouter.patch(
+  "/task/:taskId",
+  isAuthenticated,
+  toggleTaskCompletion
+);
+
 
 export default progressRouter;

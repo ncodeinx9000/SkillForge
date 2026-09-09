@@ -174,82 +174,81 @@ export const updateBusinessIdea = async (req, res) => {
 
 // PUBLISH business idea
 export const publishBusinessIdea = async (req, res) => {
-    try {
-        const { ideaId } = req.params;
+  try {
+    const { ideaId } = req.params;
 
-        const businessIdea = await BusinessIdea.findByIdAndUpdate(
-            ideaId,
-            {
-                status: "published",
-            },
-            {
-                new: true,
-                runValidators: true,
-            }
-        );
+    const businessIdea = await BusinessIdea.findByIdAndUpdate(
+      ideaId,
+      {
+        status: "published",
+        isPublished: true,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
-        if (!businessIdea) {
-            return res.status(404).json({
-                success: false,
-                message: "Business idea not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Business idea published successfully",
-            businessIdea,
-        });
-
-    } catch (error) {
-        console.error("Publish business idea error:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+    if (!businessIdea) {
+      return res.status(404).json({
+        success: false,
+        message: "Business idea not found",
+      });
     }
+
+    return res.status(200).json({
+      success: true,
+      message: "Business idea published successfully",
+      businessIdea,
+    });
+  } catch (error) {
+    console.error("Publish business idea error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 
 // UNPUBLISH business idea
 export const unpublishBusinessIdea = async (req, res) => {
-    try {
-        const { ideaId } = req.params;
+  try {
+    const { ideaId } = req.params;
 
-        const businessIdea = await BusinessIdea.findByIdAndUpdate(
-            ideaId,
-            {
-                status: "draft",
-                isPublished: false
-            },
-            {
-                new: true,
-                runValidators: true,
-            }
-        );  
+    const businessIdea = await BusinessIdea.findByIdAndUpdate(
+      ideaId,
+      {
+        status: "draft",
+        isPublished: false,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
-        if (!businessIdea) {
-            return res.status(404).json({
-                success: false,
-                message: "Business idea not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Business idea unpublished successfully",
-            businessIdea,
-        });
-
-    } catch (error) {
-        console.error("Unpublish business idea error:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+    if (!businessIdea) {
+      return res.status(404).json({
+        success: false,
+        message: "Business idea not found",
+      });
     }
+
+    return res.status(200).json({
+      success: true,
+      message: "Business idea unpublished successfully",
+      businessIdea,
+    });
+  } catch (error) {
+    console.error("Unpublish business idea error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 

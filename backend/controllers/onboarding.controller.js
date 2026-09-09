@@ -1,143 +1,175 @@
 ﻿import { User } from "../models/user.model.js";
+import { LearnerProfile } from "../models/LearnerProfile.js";
+
+/*
+|--------------------------------------------------------------------------
+| Helper: Get or create learner profile
+|--------------------------------------------------------------------------
+*/
+
+const getOrCreateLearnerProfile = async (userId) => {
+  let learnerProfile = await LearnerProfile.findOne({
+    user: userId,
+  });
+
+  if (!learnerProfile) {
+    learnerProfile = await LearnerProfile.create({
+      user: userId,
+    });
+  }
+
+  return learnerProfile;
+};
+
+/*
+|--------------------------------------------------------------------------
+| SAVE SKILLS
+|--------------------------------------------------------------------------
+*/
 
 export const saveSkill = async (req, res) => {
   try {
     const { skills } = req.body;
 
-    if (!skills || !Array.isArray(skills) || skills.length === 0) {
+    if (!Array.isArray(skills) || skills.length === 0) {
       return res.status(400).json({
         success: false,
         message: "Skills are required and must be an array",
       });
     }
 
-    const user = await User.findByIdAndUpdate(
-      req.userId,
-      { skills },
-      { new: true },
-    );
+    const learnerProfile = await getOrCreateLearnerProfile(req.userId);
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
+    learnerProfile.skills = skills;
 
-    res.json({
+    await learnerProfile.save();
+
+    return res.status(200).json({
       success: true,
       message: "Skills saved successfully",
-      user,
+      learnerProfile,
     });
   } catch (error) {
-    res.status(500).json({
+    console.error("Save skills error:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
+/*
+|--------------------------------------------------------------------------
+| SAVE INTERESTS
+|--------------------------------------------------------------------------
+*/
 
 export const saveInterests = async (req, res) => {
   try {
     const { interests } = req.body;
 
-    if (
-      !interests ||
-      !Array.isArray(interests) ||
-      interests.length === 0
-    ) {
+    if (!Array.isArray(interests) || interests.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Interest are required and must be an array",
+        message: "Interests are required and must be an array",
       });
     }
 
-    const user = await User.findByIdAndUpdate(
-      req.userId,
-      { interests },
-      { new: true },
-    );
+    const learnerProfile = await getOrCreateLearnerProfile(req.userId);
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
+    learnerProfile.interests = interests;
 
-    res.json({
+    await learnerProfile.save();
+
+    return res.status(200).json({
       success: true,
       message: "Interests saved successfully",
-      user,
+      learnerProfile,
     });
   } catch (error) {
-    res.status(500).json({
+    console.error("Save interests error:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
+/*
+|--------------------------------------------------------------------------
+| SAVE BUDGET
+|--------------------------------------------------------------------------
+*/
 
 export const saveBudget = async (req, res) => {
   try {
     const { budget } = req.body;
 
     if (!budget) {
-      return res.json({
+      return res.status(400).json({
         success: false,
-        message: "budget are required and must be an array",
+        message: "Budget is required",
       });
     }
 
-    const user = await User.findByIdAndUpdate(
-      req.userId,
-      { budget },
-      { new: true },
-    );
+    const learnerProfile = await getOrCreateLearnerProfile(req.userId);
 
-    if (!user) {
-      return res.json({
-        success: false,
-        user,
-      });
-    }
+    learnerProfile.budget = budget;
 
-    res.json({
+    await learnerProfile.save();
+
+    return res.status(200).json({
       success: true,
-      message: "budget saved successfully",
-      user,
+      message: "Budget saved successfully",
+      learnerProfile,
     });
   } catch (error) {
-    res.status(500).json({
+    console.error("Save budget error:", error);
+
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
 
-export const saveLocation = async (req, res) => {
-  const { location } = req.body;
+/*
+|--------------------------------------------------------------------------
+| SAVE LOCATION + COMPLETE ONBOARDING
+|--------------------------------------------------------------------------
+*/
 
-  if (!location) {
-    return res.json({
+export const saveLocation = async (req, res) => {
+  try {
+    const { location } = req.body;
+
+    if (!location) {
+      return res.status(400).json({
+        success: false,
+        message: "Location is required",
+      });
+    }
+
+    const learnerProfile = await getOrCreateLearnerProfile(req.userId);
+
+    learnerProfile.location = location;
+    learnerProfile.onboardingCompleted = true;
+
+    await learnerProfile.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Onboarding completed successfully",
+      learnerProfile,
+    });
+  } catch (error) {
+    console.error("Save location error:", error);
+
+    return res.status(500).json({
       success: false,
-      message: "location is required",
+      message: error.message,
     });
   }
-
-  const user = await User.findByIdAndUpdate(
-    req.userId,
-    {
-      location,
-      onboardingCompleted: true,
-    },
-    {
-      new: true,
-    },
-  );
-
-  res.json({
-    success: true,
-    user,
-  });
 };

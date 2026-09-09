@@ -84,7 +84,7 @@ const mentorSchema = new mongoose.Schema(
     verificationStatus: {
       type: String,
       enum: ["pending", "verified", "rejected"],
-      default: "unverified",
+      default: "pending",
     },
 
   socialLinks: {

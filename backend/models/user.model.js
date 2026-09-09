@@ -48,37 +48,6 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-
-    selectedBusinessIdea: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "BusinessIdea",
-      default: null,
-    },
-
-    skills: {
-      type: [String],
-      default: [],
-    },
-
-    interests: {
-      type: [String],
-      default: [],
-    },
-
-    budget: {
-      type: String,
-      default: "",
-    },
-
-    location: {
-      type: String,
-      default: "",
-    },
-
-    onboardingCompleted: {
-      type: Boolean,
-      default: false,
-    },
   },
   { timestamps: true },
 );
