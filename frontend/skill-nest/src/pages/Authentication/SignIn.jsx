@@ -37,6 +37,8 @@ function SignIn() {
 
       const user = res.data.user;
 
+      dispatch(loginSuccess(user));
+
       if (user.role === "learner") {
         navigate("/learner/dashboard");
       } else if (user.role === "mentor") {
@@ -47,7 +49,6 @@ function SignIn() {
         navigate("/");
       }
 
-      dispatch(loginSuccess(res.data.user));
     } catch (error) {
       console.log(error);
     }

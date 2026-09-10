@@ -36,7 +36,7 @@ export const createResource = async (req, res) => {
             
             createdBy: req.userId,
 
-            status: "approved",
+            status: "draft",
             isPublished: false,
         });
 

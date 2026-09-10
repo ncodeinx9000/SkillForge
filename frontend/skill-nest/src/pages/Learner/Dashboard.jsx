@@ -3,22 +3,22 @@ import { RxPeople } from "react-icons/rx";
 import { FaBullseye } from "react-icons/fa";
 import { LuBookMarked } from "react-icons/lu";
 import { useState } from "react";
-import WelcomeBanner from "../../components/Learner/LearnerDashboard.jsx/WelcomeBanner";
-import Navbar from "../../components/Learner/LearnerDashboard.jsx/Navbar";
-import Sidebar from "../../components/Learner/LearnerDashboard.jsx/Sidebar";
-import StatsCard from "../../components/Learner/LearnerDashboard.jsx/StatsCards";
-import ActiveRoadmap from "../../components/Learner/LearnerDashboard.jsx/ActiveRoadmap";
-import MentorCard from "../../components/Learner/LearnerDashboard.jsx/MentorCard";
-import InterestCard from "../../components/Learner/LearnerDashboard.jsx/InterestCard";
-import RecommendedIdeas from "../../components/Learner/LearnerDashboard.jsx/RecommendedIdeas";
-import LearningResources from "../../components/Learner/LearnerDashboard.jsx/LearningResources";
+import WelcomeBanner from "../../components/Learner/LearnerDashboard/WelcomeBanner";
+import Navbar from "../../components/Learner/LearnerDashboard/Navbar";
+import Sidebar from "../../components/Learner/LearnerDashboard/Sidebar";
+import StatsCard from "../../components/Learner/LearnerDashboard/StatsCards";
+import ActiveRoadmap from "../../components/Learner/LearnerDashboard/ActiveRoadmap";
+import MentorCard from "../../components/Learner/LearnerDashboard/MentorCard";
+import InterestCard from "../../components/Learner/LearnerDashboard/InterestCard";
+import RecommendedIdeas from "../../components/Learner/LearnerDashboard/RecommendedIdeas";
+import LearningResources from "../../components/Learner/LearnerDashboard/LearningResources";
 import api from "../../lib/axios";
 
 export default function Dashboard() {
 
   const getLearnerDashboard = async()=> {
     try {
-       const res = await api.get('/api/learner/dashboard')
+       const res = await api.get("/learner/dashboard")
     } catch (error) {
       console.log(error);
       
@@ -30,7 +30,7 @@ export default function Dashboard() {
 
   return (
     <div className="bg-[#f5f2eb]  min-h-screen overflow-hidden">
-      <Navbar />
+      <Navbar showSidebar={showSidebar} />
 
       {/*sidebar*/}
       <Sidebar showSidebar={showSidebar} setShowSidebar={setShowSidebar} />

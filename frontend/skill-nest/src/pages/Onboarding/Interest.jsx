@@ -1,16 +1,13 @@
 ﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 
 import OnboardingLayout from "../../components/onboarding/OnboardingLayout";
 import OptionSelector from "../../components/onboarding/OptionSelector";
 import businessInterests from "../../data/businessInterests";
 import api from "../../lib/axios";
-import { updateUser } from "../../redux/userSlice";
 
 function Interest() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const [selectedInterests, setSelectedInterests] = useState([]);
 
@@ -21,19 +18,20 @@ function Interest() {
 
     try {
       const res = await api.put(
-        "/api/onboarding/interests",
+        "/onboarding/interests",
         {
           interests: selectedInterests,
         },
-        {
-          withCredentials: true,
-        },
       );
 
-      dispatch(updateUser(res.data.user));
       navigate("/onboarding/budget");
+    
+
     } catch (error) {
-      console.log(error);
+      console.error(
+      "Saving budget failed:",
+      error.response?.data || error.message
+    );
     }
   };
 

@@ -1,16 +1,14 @@
 ﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+
 
 import OnboardingLayout from "../../components/onboarding/OnboardingLayout";
 import OptionSelector from "../../components/onboarding/OptionSelector";
 import locations from "../../data/locations";
 import api from "../../lib/axios";
-import { updateUser } from "../../redux/userSlice";
 
 function Location() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const [selectedLocation, setSelectedLocation] = useState("");
 
@@ -21,19 +19,20 @@ function Location() {
 
     try {
       const res = await api.put(
-        "/api/onboarding/location",
+        "/onboarding/location",
         {
           location: selectedLocation,
         },
-        {
-          withCredentials: true,
-        },
       );
 
-      dispatch(updateUser(res.data.user));
-      navigate("/learner");
+      navigate("/learner/dashboard");
+    
+
     } catch (error) {
-      console.log(error);
+      console.error(
+      "Saving location failed:",
+      error.response?.data || error.message
+      );
     }
   };
 

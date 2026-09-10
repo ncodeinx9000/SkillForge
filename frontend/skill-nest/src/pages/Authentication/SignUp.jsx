@@ -9,7 +9,6 @@ import { RiSecurePaymentLine } from "react-icons/ri";
 import { FaArrowRightLong } from "react-icons/fa6";
 import bgImage from "../../assets/bg-image.jpg"
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import api from "../../lib/axios";
 import { useDispatch } from "react-redux";
@@ -38,8 +37,7 @@ function SignUp() {
         return;
       }
 
-      const res = await axios.post(
-        "http://localhost:8000/api/auth/register",
+      const res = await api.post("/auth/register",
         {
           name: fullName,
           email,
@@ -177,7 +175,7 @@ function SignUp() {
               <input
                 onChange={(e) => setPassword(e.target.value)}
                 value={password}
-                type="text"
+                type="password"
                 className="w-96 border-none outline-none"
                 placeholder=" Enter password"
               />
@@ -197,7 +195,7 @@ function SignUp() {
               <input
                 onChange={(e) => setCOnfirmPassword(e.target.value)}
                 value={confirmPassword}
-                type="text"
+                type="password"
                 className="w-96 border-none outline-none"
                 placeholder="Enter your confirm password"
               />

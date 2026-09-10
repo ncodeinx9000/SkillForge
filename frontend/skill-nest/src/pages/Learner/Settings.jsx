@@ -1,6 +1,6 @@
 import { useState } from "react";
-import Navbar from "../../components/Learner/LearnerDashboard.jsx/Navbar";
-import Sidebar from "../../components/Learner/LearnerDashboard.jsx/Sidebar";
+import Navbar from "../../components/Learner/LearnerDashboard/Navbar";
+import Sidebar from "../../components/Learner/LearnerDashboard/Sidebar";
 import { GoDash } from "react-icons/go";
 import { MdOutlinePersonOutline } from "react-icons/md";
 import { AiOutlineThunderbolt } from "react-icons/ai";

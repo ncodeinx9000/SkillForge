@@ -7,6 +7,8 @@ const AdminCreateRoadmap = () => {
     const API_URL = import.meta.env.VITE_API_URL;
 
     const [businessIdeas, setBusinessIdeas] = useState([]);
+    const [resources, setResources] = useState([]);
+const [loadingResources, setLoadingResources] = useState(false);
 
     const [loadingIdeas, setLoadingIdeas] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -59,8 +61,41 @@ const AdminCreateRoadmap = () => {
         }
     };
 
+
+    const fetchResources = async () => {
+    try {
+        setLoadingResources(true);
+
+        const response = await fetch(
+            `${API_URL}/api/admin/resources/available`,
+            {
+                method: "GET",
+                credentials: "include",
+            }
+        );
+
+        const data = await response.json();
+
+        if (!data.success) {
+            alert(data.message || "Failed to load resources.");
+            return;
+        }
+
+        setResources(data.resources || []);
+
+    } catch (error) {
+        console.error("Error fetching resources:", error);
+        alert("Failed to load resources.");
+    } finally {
+        setLoadingResources(false);
+    }
+};
+
+
+
     useEffect(() => {
         fetchBusinessIdeas();
+        fetchResources();
     }, []);
 
     // ==========================================
@@ -160,6 +195,39 @@ const AdminCreateRoadmap = () => {
             };
         });
     };
+
+
+    // ==========================================
+// TOGGLE RESOURCE FOR STEP
+// ==========================================
+
+const toggleResource = (stepIndex, resourceId) => {
+    setFormData((prev) => {
+        const updatedSteps = [...prev.steps];
+
+        const currentResources =
+            updatedSteps[stepIndex].resources || [];
+
+        const alreadySelected =
+            currentResources.includes(resourceId);
+
+        updatedSteps[stepIndex] = {
+            ...updatedSteps[stepIndex],
+            resources: alreadySelected
+                ? currentResources.filter(
+                      (id) => id !== resourceId
+                  )
+                : [...currentResources, resourceId],
+        };
+
+        return {
+            ...prev,
+            steps: updatedSteps,
+        };
+    });
+};
+
+
 
     // ==========================================
     // ADD TASK
@@ -282,6 +350,8 @@ const AdminCreateRoadmap = () => {
                         (task) =>
                             task.title.trim() !== ""
                     ),
+
+                    resources: step.resources || [],
                 })),
             };
 
@@ -939,6 +1009,126 @@ const AdminCreateRoadmap = () => {
                     )}
 
                 </div>
+
+
+                {/* ==================================
+    LEARNING RESOURCES
+================================== */}
+
+<div className="mt-8">
+
+    <div className="flex items-center justify-between mb-3">
+
+        <div>
+            <h3 className="text-sm font-semibold text-gray-800">
+                Learning Resources
+            </h3>
+
+            <p className="text-xs text-gray-500 mt-1">
+                Select resources that will help learners
+                complete this step.
+            </p>
+        </div>
+
+        <span className="text-xs text-gray-500">
+            {step.resources?.length || 0} selected
+        </span>
+
+    </div>
+
+    {loadingResources ? (
+        <div className="border border-gray-200 rounded-lg p-4">
+            <p className="text-sm text-gray-500">
+                Loading resources...
+            </p>
+        </div>
+    ) : resources.length === 0 ? (
+        <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <p className="text-sm text-gray-500">
+                No published resources available.
+            </p>
+
+            <p className="text-xs text-gray-400 mt-1">
+                Create and publish resources first.
+            </p>
+        </div>
+    ) : (
+        <div className="space-y-2">
+
+            {resources.map((resource) => {
+
+                const selected =
+                    step.resources?.includes(
+                        resource._id
+                    );
+
+                return (
+                    <label
+                        key={resource._id}
+                        className={`
+                            flex items-start gap-3
+                            p-3 rounded-lg border
+                            cursor-pointer
+                            transition
+                            ${
+                                selected
+                                    ? "border-indigo-400 bg-indigo-50"
+                                    : "border-gray-200 bg-white hover:bg-gray-50"
+                            }
+                        `}
+                    >
+
+                        <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={() =>
+                                toggleResource(
+                                    stepIndex,
+                                    resource._id
+                                )
+                            }
+                            className="mt-1"
+                        />
+
+                        <div className="flex-1">
+
+                            <div className="flex items-center gap-2">
+
+                                <p className="text-sm font-medium text-gray-800">
+                                    {resource.title}
+                                </p>
+
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                                    {resource.type}
+                                </span>
+
+                            </div>
+
+                            {resource.description && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {resource.description}
+                                </p>
+                            )}
+
+                            {resource.estimatedDuration && (
+                                <p className="text-xs text-gray-400 mt-1">
+                                    Duration:{" "}
+                                    {resource.estimatedDuration}
+                                </p>
+                            )}
+
+                        </div>
+
+                    </label>
+                );
+            })}
+
+        </div>
+    )}
+
+</div>
+
+
 
                 {/* ==================================
                     ACTIONS

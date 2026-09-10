@@ -4,6 +4,7 @@ import { isAuthenticated } from "../middleware/auth.js";
 
 import {
   getMyProgress,
+  toggleResourceCompletion,
   toggleTaskCompletion,
 } from "../controllers/progress.controller.js";
 
@@ -26,5 +27,10 @@ progressRouter.patch(
   toggleTaskCompletion
 );
 
+progressRouter.patch(
+  "/resource/:resourceId",
+  isAuthenticated,
+  toggleResourceCompletion
+);
 
 export default progressRouter;

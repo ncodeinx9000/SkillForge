@@ -75,34 +75,95 @@ export const getRecommendedIdea = async (req, res) => {
 |--------------------------------------------------------------------------
 */
 
+// GET single business idea with complete details
 export const getBusinessIdeaById = async (req, res) => {
-  try {
-    const { businessIdeaId } = req.params;
+    try {
+        const { ideaId } = req.params;
 
-    const idea = await BusinessIdea.findById(businessIdeaId)
-      .populate("mentor")
-      .populate("roadmap")
-      .populate("resources");
+        // ==========================================
+        // GET BUSINESS IDEA
+        // ==========================================
 
-    if (!idea) {
-      return res.status(404).json({
-        success: false,
-        message: "Business idea not found",
-      });
+        const businessIdea = await BusinessIdea.findById(ideaId)
+            .populate({
+                path: "mentor",
+                populate: {
+                    path: "user",
+                    select: "name email",
+                },
+            })
+            .populate("roadmap")
+            .populate("resources");
+
+        if (!businessIdea) {
+            return res.status(404).json({
+                success: false,
+                message: "Business idea not found",
+            });
+        }
+
+        // ==========================================
+        // GET ROADMAP WITH RESOURCES
+        // ==========================================
+
+        let roadmap = null;
+
+        if (businessIdea.roadmap?._id) {
+            roadmap = await businessIdea.roadmap.populate(
+                "steps.resources"
+            );
+        }
+
+        // ==========================================
+        // GET LEARNERS USING THIS BUSINESS IDEA
+        // ==========================================
+
+        const learnerProgress = await LearnerProgress.find({
+            businessIdea: ideaId,
+        })
+            .populate({
+                path: "learner",
+                select: "name email role",
+            })
+            .populate({
+                path: "bookedMentor",
+                populate: {
+                    path: "user",
+                    select: "name email",
+                },
+            })
+            .populate("roadmap")
+            .populate({
+                path: "completedResources.resourceId",
+                select: "title type url",
+            })
+            .sort({ updatedAt: -1 });
+
+        // ==========================================
+        // RESPONSE
+        // ==========================================
+
+        return res.status(200).json({
+            success: true,
+
+            businessIdea,
+
+            roadmap,
+
+            learners: learnerProgress,
+        });
+
+    } catch (error) {
+        console.error(
+            "Get business idea details error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
     }
-
-    return res.status(200).json({
-      success: true,
-      idea,
-    });
-  } catch (error) {
-    console.error("Get business idea by ID error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };
 
 /*

@@ -1,8 +1,8 @@
 import { GoDash } from "react-icons/go";
 
 import { useState } from "react";
-import Navbar from "../../components/Learner/LearnerDashboard.jsx/Navbar";
-import Sidebar from "../../components/Learner/LearnerDashboard.jsx/Sidebar";
+import Navbar from "../../components/Learner/LearnerDashboard/Navbar";
+import Sidebar from "../../components/Learner/LearnerDashboard/Sidebar";
 
 import { IoIosArrowDown } from "react-icons/io";
 import { FaRegCheckCircle } from "react-icons/fa";

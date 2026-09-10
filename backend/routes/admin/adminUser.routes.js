@@ -1,5 +1,8 @@
 import express from "express";
 
+import { isAuthenticated } from "../../middleware/auth.js";
+import { isAdmin } from "../../middleware/admin.js";
+
 import {
     getAllUsers,
     getUserById,
@@ -9,17 +12,17 @@ import {
     verifyUser,
     unverifyUser,
     deleteUser,
+    getAllLearners,
+    getLearnerDetails,
 } from "../../controllers/admin/adminUser.controller.js";
 
-import { isAuthenticated } from "../../middleware/auth.js";
-import { isAdmin } from "../../middleware/admin.js";
 
 const adminUserRouter = express.Router();
 
 
-// ==========================================
-// GET ALL USERS
-// ==========================================
+// ======================================================
+// GENERAL USER MANAGEMENT
+// ======================================================
 
 adminUserRouter.get(
     "/",
@@ -29,33 +32,12 @@ adminUserRouter.get(
 );
 
 
-// ==========================================
-// GET SINGLE USER
-// ==========================================
-
-adminUserRouter.get(
-    "/:userId",
-    isAuthenticated,
-    isAdmin,
-    getUserById
-);
-
-
-// ==========================================
-// UPDATE USER
-// ==========================================
-
 adminUserRouter.put(
     "/:userId",
     isAuthenticated,
     isAdmin,
     updateUser
 );
-
-
-// ==========================================
-// ACTIVATE USER
-// ==========================================
 
 adminUserRouter.patch(
     "/:userId/activate",
@@ -64,22 +46,12 @@ adminUserRouter.patch(
     activateUser
 );
 
-
-// ==========================================
-// DEACTIVATE USER
-// ==========================================
-
 adminUserRouter.patch(
     "/:userId/deactivate",
     isAuthenticated,
     isAdmin,
     deactivateUser
 );
-
-
-// ==========================================
-// VERIFY USER
-// ==========================================
 
 adminUserRouter.patch(
     "/:userId/verify",
@@ -88,11 +60,6 @@ adminUserRouter.patch(
     verifyUser
 );
 
-
-// ==========================================
-// UNVERIFY USER
-// ==========================================
-
 adminUserRouter.patch(
     "/:userId/unverify",
     isAuthenticated,
@@ -100,16 +67,40 @@ adminUserRouter.patch(
     unverifyUser
 );
 
-
-// ==========================================
-// DELETE USER
-// ==========================================
-
 adminUserRouter.delete(
     "/:userId",
     isAuthenticated,
     isAdmin,
     deleteUser
+);
+
+
+// ======================================================
+// LEARNER MANAGEMENT
+// ======================================================
+
+// IMPORTANT:
+// These must come BEFORE "/:userId"
+
+adminUserRouter.get(
+    "/learners",
+    isAuthenticated,
+    isAdmin,
+    getAllLearners
+);
+
+adminUserRouter.get(
+    "/learners/:learnerId",
+    isAuthenticated,
+    isAdmin,
+    getLearnerDetails
+);
+
+adminUserRouter.get(
+    "/:userId",
+    isAuthenticated,
+    isAdmin,
+    getUserById
 );
 
 export default adminUserRouter;

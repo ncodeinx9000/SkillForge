@@ -1,5 +1,5 @@
-import Navbar from "../../components/Learner/LearnerDashboard.jsx/Navbar";
-import Sidebar from "../../components/Learner/LearnerDashboard.jsx/Sidebar";
+import Navbar from "../../components/Learner/LearnerDashboard/Navbar";
+import Sidebar from "../../components/Learner/LearnerDashboard/Sidebar";
 import { GoDash } from "react-icons/go";
 import { useState } from "react";
 import { CiSearch } from "react-icons/ci";

@@ -1,16 +1,15 @@
 ﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 
 import OnboardingLayout from "../../components/onboarding/OnboardingLayout";
 import OptionSelector from "../../components/onboarding/OptionSelector";
 import skills from "../../data/skills";
 import api from "../../lib/axios";
-import { updateUser } from "../../redux/userSlice";
+
 
 function Skills() {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+
 
   const [selectedSkills, setSelectedSkills] = useState([]);
 
@@ -21,19 +20,20 @@ function Skills() {
 
     try {
       const res = await api.put(
-        "/api/onboarding/skills",
+        "/onboarding/skills",
         {
           skills: selectedSkills,
         },
-        {
-          withCredentials: true,
-        },
       );
 
-      dispatch(updateUser(res.data.user));
       navigate("/onboarding/interests");
+    
+
     } catch (error) {
-      console.log(error);
+       console.error(
+      "Saving interests failed:",
+      error.response?.data || error.message
+    );
     }
   };
 
