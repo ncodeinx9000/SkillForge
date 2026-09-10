@@ -1,370 +1,450 @@
 import React, { useState } from "react";
-import {
-  IoIosArrowDown,
-  IoIosArrowUp,
-} from "react-icons/io";
+import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import {
   FaRegCheckCircle,
+  FaCheckCircle,
   FaHandPointRight,
-  FaExternalLinkAlt,
 } from "react-icons/fa";
+
+import { FaArrowUpRightFromSquare } from "react-icons/fa6";
+
 import {
   FiBookOpen,
   FiClock,
   FiFileText,
-  FiPlayCircle,
+  FiVideo,
   FiLink,
 } from "react-icons/fi";
-import { LiaRupeeSignSolid } from "react-icons/lia";
-
-const getResourceIcon = (type) => {
-  switch (type) {
-    case "Video":
-      return <FiPlayCircle className="text-red-500" size={18} />;
-
-    case "PDF":
-      return <FiFileText className="text-orange-500" size={18} />;
-
-    case "Course":
-      return <FiBookOpen className="text-blue-500" size={18} />;
-
-    case "Website":
-      return <FiLink className="text-green-500" size={18} />;
-
-    case "Article":
-      return <FiFileText className="text-purple-500" size={18} />;
-
-    case "Template":
-      return <FiFileText className="text-indigo-500" size={18} />;
-
-    default:
-      return <FiBookOpen className="text-gray-500" size={18} />;
-  }
-};
 
 const Step = ({
   step,
   completedTaskIds = [],
   onTaskToggle,
   readOnly = false,
+
+  completedResourceIds = [],
+  onResourceToggle,
 }) => {
   const [isOpen, setIsOpen] = useState(true);
 
-  if (!step) return null;
+  if (!step) {
+    return null;
+  }
 
   const tasks = step.tasks || [];
   const resources = step.resources || [];
 
   const completedTasks = tasks.filter((task) =>
-    completedTaskIds.includes(task._id)
+    completedTaskIds.includes(task._id?.toString()),
   ).length;
 
   const totalTasks = tasks.length;
 
-  const progress =
-    totalTasks > 0
-      ? Math.round((completedTasks / totalTasks) * 100)
-      : 0;
+  const percentage =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  const getResourceIcon = (type) => {
+    switch (type) {
+      case "Video":
+        return <FiVideo size={18} />;
+
+      case "PDF":
+        return <FiFileText size={18} />;
+
+      case "Website":
+        return <FiLink size={18} />;
+
+      case "Article":
+      case "Course":
+      case "Template":
+      default:
+        return <FiBookOpen size={18} />;
+    }
+  };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      {/* =================================================
+                STEP HEADER
+            ================================================= */}
 
-      {/* ================= STEP HEADER ================= */}
       <div
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-5 sm:p-6 cursor-pointer hover:bg-gray-50 transition"
+        className="p-5 sm:p-6 cursor-pointer"
+        onClick={() => setIsOpen((prev) => !prev)}
       >
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4">
+          {/* STEP NUMBER */}
 
-          <div className="flex items-start gap-4">
+          <div
+            className={`
+                            flex-shrink-0
+                            w-11 h-11
+                            rounded-xl
+                            flex items-center justify-center
+                            font-bold
+                            ${
+                              percentage === 100
+                                ? "bg-green-100 text-green-700"
+                                : "bg-indigo-100 text-indigo-600"
+                            }
+                        `}
+          >
+            {step.order}
+          </div>
 
-            {/* Step Number */}
-            <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold shrink-0">
-              {step.order}
-            </div>
+          {/* STEP DETAILS */}
 
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-                {step.title}
-              </h2>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+                  {step.title}
+                </h2>
 
-              {step.description && (
-                <p className="text-sm text-gray-500 mt-1 leading-relaxed">
-                  {step.description}
-                </p>
-              )}
-
-              <div className="flex flex-wrap items-center gap-3 mt-3">
-
-                {step.estimatedDays > 0 && (
-                  <span className="flex items-center gap-1 text-xs text-gray-500">
-                    <FiClock size={14} />
-                    {step.estimatedDays} days
-                  </span>
+                {step.description && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    {step.description}
+                  </p>
                 )}
+              </div>
 
-                {step.estimatedCost > 0 && (
-                  <span className="flex items-center gap-1 text-xs text-gray-500">
-                    <LiaRupeeSignSolid size={15} />
-                    {step.estimatedCost}
-                  </span>
-                )}
+              {/* ARROW */}
 
-                <span className="text-xs text-gray-500">
-                  {completedTasks}/{totalTasks} tasks
-                </span>
-
-                {resources.length > 0 && (
-                  <span className="text-xs text-indigo-600">
-                    {resources.length} resources
-                  </span>
+              <div className="text-gray-500 flex-shrink-0">
+                {isOpen ? (
+                  <IoIosArrowUp size={22} />
+                ) : (
+                  <IoIosArrowDown size={22} />
                 )}
               </div>
             </div>
-          </div>
 
-          <button
-            type="button"
-            className="text-gray-500 p-1"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsOpen(!isOpen);
-            }}
-          >
-            {isOpen ? (
-              <IoIosArrowUp size={22} />
-            ) : (
-              <IoIosArrowDown size={22} />
-            )}
-          </button>
-        </div>
+            {/* PROGRESS */}
 
-        {/* Progress Bar */}
-        <div className="mt-5">
-          <div className="flex justify-between text-xs mb-1">
-            <span className="text-gray-500">Step Progress</span>
-            <span className="font-medium text-indigo-600">
-              {progress}%
-            </span>
-          </div>
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-500">
+                  {completedTasks} / {totalTasks} tasks completed
+                </span>
 
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-indigo-500 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
+                <span className="text-xs font-semibold text-gray-700">
+                  {percentage}%
+                </span>
+              </div>
+
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-indigo-500 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${percentage}%`,
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ================= STEP CONTENT ================= */}
+      {/* =================================================
+                STEP CONTENT
+            ================================================= */}
+
       {isOpen && (
-        <div className="border-t border-gray-100 p-5 sm:p-6">
+        <div className="border-t border-gray-100">
+          <div className="p-5 sm:p-6">
+            {/* =================================================
+                            TIP
+                        ================================================= */}
 
-          {/* ================= TIP ================= */}
-          {step.tip && (
-            <div className="mb-6 flex gap-3 bg-yellow-50 border border-yellow-100 rounded-xl p-4">
-              <FaHandPointRight
-                className="text-yellow-600 mt-1 shrink-0"
-                size={18}
-              />
+            {step.tip && (
+              <div className="flex gap-3 p-4 mb-6 bg-amber-50 border border-amber-100 rounded-xl">
+                <div className="flex-shrink-0 text-amber-600 pt-0.5">
+                  <FaHandPointRight size={18} />
+                </div>
 
-              <div>
-                <p className="text-sm font-semibold text-yellow-800">
-                  Tip
-                </p>
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">Tip</p>
 
-                <p className="text-sm text-yellow-700 mt-1">
-                  {step.tip}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* ================= TASKS ================= */}
-          <div>
-            <h3 className="text-base font-semibold text-gray-800 mb-3">
-              Tasks
-            </h3>
-
-            {tasks.length === 0 ? (
-              <div className="border border-gray-200 rounded-xl p-4 text-sm text-gray-500">
-                No tasks available for this step.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {tasks.map((task, index) => {
-                  const isCompleted = completedTaskIds.includes(task._id);
-
-                  return (
-                    <label
-                      key={task._id || index}
-                      className={`flex items-start gap-3 p-4 rounded-xl border transition ${
-                        isCompleted
-                          ? "bg-green-50 border-green-200"
-                          : "bg-white border-gray-200 hover:bg-gray-50"
-                      } ${
-                        readOnly
-                          ? "cursor-default"
-                          : "cursor-pointer"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isCompleted}
-                        disabled={readOnly}
-                        onChange={() => {
-                          if (!readOnly && onTaskToggle) {
-                            onTaskToggle(task._id);
-                          }
-                        }}
-                        className="mt-1 w-4 h-4 accent-indigo-600"
-                      />
-
-                      <div className="flex-1">
-                        <p
-                          className={`text-sm ${
-                            isCompleted
-                              ? "text-green-700 line-through"
-                              : "text-gray-700"
-                          }`}
-                        >
-                          {task.title}
-                        </p>
-                      </div>
-
-                      {isCompleted && (
-                        <FaRegCheckCircle
-                          className="text-green-500 shrink-0"
-                          size={18}
-                        />
-                      )}
-                    </label>
-                  );
-                })}
+                  <p className="text-sm text-amber-700 mt-1">{step.tip}</p>
+                </div>
               </div>
             )}
-          </div>
 
-          {/* ================= LEARNING RESOURCES ================= */}
-          <div className="mt-8">
+            {/* =================================================
+                            TASKS
+                        ================================================= */}
 
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="text-base font-semibold text-gray-800">
-                  Learning Resources
-                </h3>
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold text-gray-800">Tasks</h3>
 
-                <p className="text-xs text-gray-500 mt-1">
-                  Use these resources to help you complete this step.
-                </p>
+                <span className="text-xs text-gray-500">
+                  {completedTasks}/{totalTasks}
+                </span>
               </div>
 
-              <span className="text-xs text-gray-500">
-                {resources.length} resource
-                {resources.length !== 1 ? "s" : ""}
-              </span>
+              {tasks.length === 0 ? (
+                <div className="p-4 bg-gray-50 rounded-xl text-sm text-gray-500">
+                  No tasks available for this step.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {tasks.map((task, index) => {
+                    const taskId = task._id?.toString();
+
+                    const completed = completedTaskIds.includes(taskId);
+
+                    return (
+                      <button
+                        key={task._id || index}
+                        type="button"
+                        disabled={readOnly}
+                        onClick={() => {
+                          if (!readOnly) {
+                            onTaskToggle?.(taskId);
+                          }
+                        }}
+                        className={`
+                                                    w-full
+                                                    flex items-center gap-3
+                                                    text-left
+                                                    p-4
+                                                    rounded-xl
+                                                    border
+                                                    transition
+                                                    ${
+                                                      completed
+                                                        ? "bg-green-50 border-green-200"
+                                                        : "bg-white border-gray-200 hover:border-indigo-300 hover:bg-indigo-50"
+                                                    }
+                                                    ${
+                                                      readOnly
+                                                        ? "cursor-default"
+                                                        : "cursor-pointer"
+                                                    }
+                                                `}
+                      >
+                        {/* CHECK ICON */}
+
+                        <div className="flex-shrink-0">
+                          {completed ? (
+                            <FaCheckCircle
+                              className="text-green-600"
+                              size={21}
+                            />
+                          ) : (
+                            <FaRegCheckCircle
+                              className="text-gray-400"
+                              size={21}
+                            />
+                          )}
+                        </div>
+
+                        {/* TASK */}
+
+                        <div className="flex-1">
+                          <p
+                            className={`
+                                                            text-sm font-medium
+                                                            ${
+                                                              completed
+                                                                ? "text-green-700 line-through"
+                                                                : "text-gray-700"
+                                                            }
+                                                        `}
+                          >
+                            {task.title}
+                          </p>
+                        </div>
+
+                        {/* NUMBER */}
+
+                        <span className="text-xs text-gray-400">
+                          {index + 1}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {resources.length === 0 ? (
-              <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                <p className="text-sm text-gray-500">
-                  No learning resources have been added to this step yet.
-                </p>
+            {/* =================================================
+                            LEARNING RESOURCES
+                        ================================================= */}
+
+            <div className="mt-8">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                  <FiBookOpen size={18} />
+                </div>
+
+                <div>
+                  <h3 className="text-base font-bold text-gray-800">
+                    Learning Resources
+                  </h3>
+
+                  <p className="text-xs text-gray-500">
+                    Helpful resources for this step
+                  </p>
+                </div>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {resources.map((resource, index) => {
-                  /*
-                    Depending on populate(), resource may be:
-                    - the complete resource object
-                    - just an ObjectId/string
-                  */
 
-                  if (!resource || typeof resource !== "object") {
-                    return null;
-                  }
+              {resources.length === 0 ? (
+                <div className="p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                  <p className="text-sm text-gray-500">
+                    No learning resources have been added to this step yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {resources.map((resource, index) => {
+                    if (!resource) {
+                      return null;
+                    }
 
-                  return (
-                    <div
-                      key={resource._id || index}
-                      className="border border-gray-200 rounded-xl p-4 hover:border-indigo-200 hover:bg-indigo-50/30 transition"
-                    >
-                      <div className="flex items-start gap-3">
+                    return (
+                      <div
+                        key={resource._id || index}
+                        className="border border-gray-200 rounded-xl p-4 hover:border-indigo-300 transition"
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* RESOURCE ICON */}
 
-                        {/* Resource Icon */}
-                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                          {getResourceIcon(resource.type)}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-
-                          {/* Title + Type */}
-                          <div className="flex flex-wrap items-center gap-2">
-
-                            <h4 className="text-sm font-semibold text-gray-800">
-                              {resource.title}
-                            </h4>
-
-                            {resource.type && (
-                              <span className="text-[10px] px-2 py-1 rounded-full bg-gray-100 text-gray-600">
-                                {resource.type}
-                              </span>
-                            )}
+                          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center">
+                            {getResourceIcon(resource.type)}
                           </div>
 
-                          {/* Description */}
-                          {resource.description && (
-                            <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-                              {resource.description}
-                            </p>
-                          )}
+                          {/* RESOURCE INFO */}
 
-                          {/* Meta */}
-                          <div className="flex flex-wrap items-center gap-3 mt-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-sm font-semibold text-gray-800">
+                                {resource.title}
+                              </h4>
 
-                            {resource.estimatedDuration && (
-                              <span className="flex items-center gap-1 text-xs text-gray-400">
-                                <FiClock size={13} />
-                                {resource.estimatedDuration}
-                              </span>
+                              {resource.type && (
+                                <span className="text-[10px] px-2 py-1 rounded-full bg-indigo-50 text-indigo-600">
+                                  {resource.type}
+                                </span>
+                              )}
+                            </div>
+
+                            {resource.description && (
+                              <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                                {resource.description}
+                              </p>
                             )}
 
-                            {resource.level && (
-                              <span className="text-xs text-gray-400">
-                                {resource.level}
-                              </span>
+                            {/* META */}
+
+                            <div className="flex flex-wrap gap-4 mt-2">
+                              {resource.estimatedDuration && (
+                                <span className="flex items-center gap-1 text-xs text-gray-400">
+                                  <FiClock size={13} />
+
+                                  {resource.estimatedDuration}
+                                </span>
+                              )}
+
+                              {resource.level && (
+                                <span className="text-xs text-gray-400">
+                                  Level: {resource.level}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* OPEN RESOURCE */}
+
+                            {resource.url && (
+                              <a
+                                href={resource.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition"
+                              >
+                                Open Resource
+                                <FaArrowUpRightFromSquare size={11} />
+                              </a>
                             )}
 
-                            {resource.category && (
-                              <span className="text-xs text-gray-400">
-                                {resource.category}
-                              </span>
+                            {/* RESOURCE COMPLETION */}
+
+                            {!readOnly && resource._id && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  onResourceToggle?.(resource._id.toString())
+                                }
+                                className={`
+            inline-flex
+            items-center
+            gap-2
+            mt-3
+            ml-2
+            px-3
+            py-2
+            rounded-lg
+            text-xs
+            font-medium
+            transition
+            ${
+              completedResourceIds.includes(resource._id.toString())
+                ? "bg-green-100 text-green-700 hover:bg-green-200"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }
+        `}
+                              >
+                                {completedResourceIds.includes(
+                                  resource._id.toString(),
+                                ) ? (
+                                  <>
+                                    <FaCheckCircle size={13} />
+                                    Completed
+                                  </>
+                                ) : (
+                                  <>
+                                    <FaRegCheckCircle size={13} />
+                                    Mark Complete
+                                  </>
+                                )}
+                              </button>
                             )}
                           </div>
-
-                          {/* Open Resource */}
-                          {resource.url && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                window.open(
-                                  resource.url,
-                                  "_blank",
-                                  "noopener,noreferrer"
-                                )
-                              }
-                              className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700 transition"
-                            >
-                              Open Resource
-                              <FaExternalLinkAlt size={11} />
-                            </button>
-                          )}
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* =================================================
+                            STEP ESTIMATION
+                        ================================================= */}
+
+            {(step.estimatedDays || step.estimatedCost) && (
+              <div className="flex flex-wrap gap-4 mt-6 pt-5 border-t border-gray-100">
+                {step.estimatedDays > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-400">Estimated Time</p>
+
+                    <p className="text-sm font-semibold text-gray-700 mt-1">
+                      {step.estimatedDays} days
+                    </p>
+                  </div>
+                )}
+
+                {step.estimatedCost > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-400">Estimated Cost</p>
+
+                    <p className="text-sm font-semibold text-gray-700 mt-1">
+                      ₹{step.estimatedCost}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

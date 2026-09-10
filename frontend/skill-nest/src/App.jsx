@@ -40,6 +40,10 @@ import CreateBusinessIdea from "./pages/admin/CreateBusinessIdea";
 
 // Protection
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminEditRoadmap from "./pages/admin/AdminEditRoadmap";
+import AdminLearners from "./pages/admin/AdminLearners";
+import AdminLearnerDetails from "./pages/admin/AdminLearnerDetails";
+import AdminBusinessIdeaDetails from "./pages/admin/AdminBusinessIdeaDetails";
 
 function App() {
   return (
@@ -134,6 +138,11 @@ function App() {
 
           <Route path="roadmaps/create" element={<AdminCreateRoadmap />} />
 
+          <Route
+            path="/admin/roadmaps/:roadmapId/edit"
+            element={<AdminEditRoadmap />}
+          />
+
           <Route path="resources" element={<AdminResources />} />
 
           <Route path="users" element={<AdminUsers />} />
@@ -141,6 +150,18 @@ function App() {
           <Route path="reports" element={<AdminReport />} />
 
           <Route path="profile" element={<AdminProfile />} />
+
+          <Route path="/admin/learners" element={<AdminLearners />} />
+
+          <Route
+            path="/admin/learners/:learnerId"
+            element={<AdminLearnerDetails />}
+          />
+
+          <Route
+    path="/admin/business-ideas/:ideaId"
+    element={<AdminBusinessIdeaDetails />}
+/>
         </Route>
       </Route>
 

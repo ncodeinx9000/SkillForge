@@ -20,21 +20,27 @@ function Roadmap() {
 
   const [activeRoadmap, setActiveRoadmap] = useState(null);
 
-  const [completedRoadmaps, setCompletedRoadmaps] = useState([]);
+  const [completedRoadmaps, setCompletedRoadmaps] =
+    useState([]);
 
   const [selectedCompletedRoadmap, setSelectedCompletedRoadmap] =
     useState(null);
 
-  const [completedTaskIds, setCompletedTaskIds] = useState([]);
+  const [completedTaskIds, setCompletedTaskIds] =
+    useState([]);
+
+  const [completedResourceIds, setCompletedResourceIds] =
+    useState([]);
 
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
 
-  const [activeSection, setActiveSection] = useState("active");
+  const [activeSection, setActiveSection] =
+    useState("active");
 
   // =====================================================
-  // FETCH ROADMAP
+  // FETCH ROADMAP / PROGRESS
   // =====================================================
 
   useEffect(() => {
@@ -46,13 +52,12 @@ function Roadmap() {
       setLoading(true);
       setError("");
 
-      /*
-       * We use the progress endpoint because it gives us
-       * both Active and Completed roadmaps.
-       */
-      const response = await api.get(
-        "/progress/my-progress"
-      );
+      // -------------------------------------------------
+      // Get learner progress
+      // -------------------------------------------------
+
+      const response =
+        await api.get("/progress/my-progress");
 
       console.log(
         "Learner roadmap response:",
@@ -68,6 +73,10 @@ function Roadmap() {
         return;
       }
 
+      // -------------------------------------------------
+      // Get active + completed roadmaps
+      // -------------------------------------------------
+
       const active =
         response.data.activeRoadmap || null;
 
@@ -78,34 +87,64 @@ function Roadmap() {
 
       setCompletedRoadmaps(completed);
 
-      /*
-       * If an active roadmap exists, show Active section.
-       *
-       * If there is no active roadmap but there are
-       * completed roadmaps, automatically show Completed.
-       */
+      // -------------------------------------------------
+      // Determine section
+      // -------------------------------------------------
+
       if (active) {
         setActiveSection("active");
+
+        /*
+         * Active roadmap is the current roadmap.
+         */
+        setCompletedTaskIds(
+          active.completedTaskIds || []
+        );
+
+        setCompletedResourceIds(
+          active.completedResourceIds || []
+        );
       } else if (completed.length > 0) {
+        /*
+         * If there is no active roadmap,
+         * automatically show completed roadmap history.
+         */
+
         setActiveSection("completed");
-        setSelectedCompletedRoadmap(completed[0]);
+
+        const completedRoadmap =
+          selectedCompletedRoadmap &&
+          completed.find(
+            (item) =>
+              item?._id ===
+              selectedCompletedRoadmap?._id
+          );
+
+        const roadmapToSelect =
+          completedRoadmap || completed[0];
+
+        setSelectedCompletedRoadmap(
+          roadmapToSelect
+        );
+
+        setCompletedTaskIds(
+          roadmapToSelect?.completedTaskIds || []
+        );
+
+        setCompletedResourceIds(
+          roadmapToSelect?.completedResourceIds || []
+        );
+      } else {
+        /*
+         * No active and no completed roadmap.
+         */
+
+        setActiveSection("active");
+
+        setCompletedTaskIds([]);
+
+        setCompletedResourceIds([]);
       }
-
-      /*
-       * Get completed task IDs.
-       *
-       * Active roadmap:
-         active.completedTaskIds
-       *
-       * Completed roadmap:
-         completed[0].completedTaskIds
-       */
-      const roadmapForTasks =
-        active || completed[0] || null;
-
-      setCompletedTaskIds(
-        roadmapForTasks?.completedTaskIds || []
-      );
     } catch (error) {
       console.error(
         "Get learner roadmap error:",
@@ -127,9 +166,10 @@ function Roadmap() {
 
   const handleTaskToggle = async (taskId) => {
     try {
-      const response = await api.patch(
-        `/progress/task/${taskId}`
-      );
+      const response =
+        await api.patch(
+          `/progress/task/${taskId}`
+        );
 
       console.log(
         "Task completion response:",
@@ -137,29 +177,104 @@ function Roadmap() {
       );
 
       if (!response.data.success) {
+        alert(
+          response.data.message ||
+            "Failed to update task progress."
+        );
+
         return;
       }
 
-      /*
-       * Update task completion immediately.
-       */
+      // -------------------------------------------------
+      // Update task IDs immediately
+      // -------------------------------------------------
+
       setCompletedTaskIds(
-        response.data.progress.completedTaskIds || []
+        response.data.progress
+          ?.completedTaskIds || []
       );
 
       /*
-       * Reload roadmap data so that:
+       * Reload complete roadmap data.
        *
-       * - step percentages update
-       * - roadmap percentage updates
-       * - completed step count updates
-       * - Active -> Completed transition works
+       * This also handles:
+       * Active -> Completed
+       * step progress
+       * roadmap progress
+       * completed roadmap history
        */
+
       await fetchRoadmap();
     } catch (error) {
       console.error(
         "Task completion error:",
         error.response?.data || error
+      );
+
+      alert(
+        error.response?.data?.message ||
+          "Failed to update task progress."
+      );
+    }
+  };
+
+  // =====================================================
+  // RESOURCE COMPLETION
+  // =====================================================
+
+  const handleResourceToggle = async (
+    resourceId
+  ) => {
+    try {
+      // -------------------------------------------------
+      // Call backend
+      // -------------------------------------------------
+
+      const response =
+        await api.patch(
+          `/progress/resource/${resourceId}`
+        );
+
+      console.log(
+        "Resource completion response:",
+        response.data
+      );
+
+      if (!response.data.success) {
+        alert(
+          response.data.message ||
+            "Failed to update resource progress."
+        );
+
+        return;
+      }
+
+      // -------------------------------------------------
+      // Update completed resource IDs immediately
+      // -------------------------------------------------
+
+      setCompletedResourceIds(
+        response.data.progress
+          ?.completedResourceIds || []
+      );
+
+      /*
+       * Reload complete progress data.
+       *
+       * This updates resource progress and keeps
+       * the UI synchronized with MongoDB.
+       */
+
+      await fetchRoadmap();
+    } catch (error) {
+      console.error(
+        "Resource completion error:",
+        error.response?.data || error
+      );
+
+      alert(
+        error.response?.data?.message ||
+          "Failed to update resource progress."
       );
     }
   };
@@ -168,11 +283,25 @@ function Roadmap() {
   // SELECT COMPLETED ROADMAP
   // =====================================================
 
-  const handleCompletedRoadmapClick = (roadmap) => {
+  const handleCompletedRoadmapClick = (
+    roadmap
+  ) => {
     setSelectedCompletedRoadmap(roadmap);
+
+    // -----------------------------------------------
+    // Task completion IDs
+    // -----------------------------------------------
 
     setCompletedTaskIds(
       roadmap?.completedTaskIds || []
+    );
+
+    // -----------------------------------------------
+    // Resource completion IDs
+    // -----------------------------------------------
+
+    setCompletedResourceIds(
+      roadmap?.completedResourceIds || []
     );
 
     setActiveSection("completed");
@@ -185,15 +314,12 @@ function Roadmap() {
   if (loading) {
     return (
       <div className="bg-[#f5f2eb] min-h-screen">
-
         <Sidebar
           showSidebar={showSidebar}
           setShowSidebar={setShowSidebar}
         />
 
-        <Navbar
-          showSidebar={showSidebar}
-        />
+        <Navbar showSidebar={showSidebar} />
 
         <main
           className={`
@@ -210,21 +336,15 @@ function Roadmap() {
           `}
         >
           <div className="px-4 sm:px-6 py-8">
-
             <div className="max-w-[1400px] mx-auto min-h-[500px] flex items-center justify-center">
-
               <div className="text-center">
-
                 <div className="w-10 h-10 border-4 border-[#e8e4da] border-t-[#c4622a] rounded-full animate-spin mx-auto mb-4" />
 
                 <p className="text-gray-500 font-DM-Sans">
                   Loading your roadmap...
                 </p>
-
               </div>
-
             </div>
-
           </div>
         </main>
       </div>
@@ -238,15 +358,12 @@ function Roadmap() {
   if (error) {
     return (
       <div className="bg-[#f5f2eb] min-h-screen">
-
         <Sidebar
           showSidebar={showSidebar}
           setShowSidebar={setShowSidebar}
         />
 
-        <Navbar
-          showSidebar={showSidebar}
-        />
+        <Navbar showSidebar={showSidebar} />
 
         <main
           className={`
@@ -263,11 +380,8 @@ function Roadmap() {
           `}
         >
           <div className="px-4 sm:px-6 py-8">
-
             <div className="max-w-[1400px] mx-auto">
-
               <div className="bg-white rounded-3xl p-10 text-center shadow-sm">
-
                 <h2 className="text-2xl font-Outfit font-bold mb-2">
                   Unable to load roadmap
                 </h2>
@@ -293,11 +407,8 @@ function Roadmap() {
                 >
                   Try Again
                 </button>
-
               </div>
-
             </div>
-
           </div>
         </main>
       </div>
@@ -318,6 +429,24 @@ function Roadmap() {
       completedRoadmaps[0] ||
       null;
   }
+
+  // =====================================================
+  // DETERMINE RESOURCE IDS FOR CURRENT ROADMAP
+  // =====================================================
+
+  const currentCompletedResourceIds =
+    roadmapToDisplay?.completedResourceIds ||
+    completedResourceIds ||
+    [];
+
+  // =====================================================
+  // DETERMINE TASK IDS FOR CURRENT ROADMAP
+  // =====================================================
+
+  const currentCompletedTaskIds =
+    roadmapToDisplay?.completedTaskIds ||
+    completedTaskIds ||
+    [];
 
   // =====================================================
   // EMPTY ACTIVE ROADMAP
@@ -355,9 +484,7 @@ function Roadmap() {
           NAVBAR
       ================================================= */}
 
-      <Navbar
-        showSidebar={showSidebar}
-      />
+      <Navbar showSidebar={showSidebar} />
 
       {/* =================================================
           MAIN CONTENT
@@ -377,9 +504,7 @@ function Roadmap() {
           }
         `}
       >
-
         <div className="px-4 sm:px-6 py-8">
-
           <div className="max-w-[1400px] mx-auto">
 
             {/* =================================================
@@ -387,7 +512,6 @@ function Roadmap() {
             ================================================= */}
 
             <div className="mb-7">
-
               <p className="text-[#c4622a] text-sm font-DM-Sans font-semibold tracking-wide">
                 LEARNER JOURNEY
               </p>
@@ -397,10 +521,9 @@ function Roadmap() {
               </h1>
 
               <p className="text-gray-500 mt-2 font-DM-Sans">
-                Follow your roadmap and complete each step
-                toward launching your business.
+                Follow your roadmap and complete each
+                step toward launching your business.
               </p>
-
             </div>
 
             {/* =================================================
@@ -409,7 +532,9 @@ function Roadmap() {
 
             <div className="bg-[#e8e4da] rounded-2xl p-1.5 flex mb-7">
 
-              {/* Active */}
+              {/* -------------------------------------------------
+                  ACTIVE
+              ------------------------------------------------- */}
 
               <button
                 type="button"
@@ -418,7 +543,13 @@ function Roadmap() {
 
                   if (activeRoadmap) {
                     setCompletedTaskIds(
-                      activeRoadmap.completedTaskIds || []
+                      activeRoadmap.completedTaskIds ||
+                        []
+                    );
+
+                    setCompletedResourceIds(
+                      activeRoadmap.completedResourceIds ||
+                        []
                     );
                   }
                 }}
@@ -457,14 +588,18 @@ function Roadmap() {
                 </span>
               </button>
 
-              {/* Completed */}
+              {/* -------------------------------------------------
+                  COMPLETED
+              ------------------------------------------------- */}
 
               <button
                 type="button"
                 onClick={() => {
                   setActiveSection("completed");
 
-                  if (completedRoadmaps.length > 0) {
+                  if (
+                    completedRoadmaps.length > 0
+                  ) {
                     const roadmap =
                       selectedCompletedRoadmap ||
                       completedRoadmaps[0];
@@ -474,7 +609,13 @@ function Roadmap() {
                     );
 
                     setCompletedTaskIds(
-                      roadmap?.completedTaskIds || []
+                      roadmap?.completedTaskIds ||
+                        []
+                    );
+
+                    setCompletedResourceIds(
+                      roadmap?.completedResourceIds ||
+                        []
                     );
                   }
                 }}
@@ -512,7 +653,6 @@ function Roadmap() {
                   {completedRoadmaps.length}
                 </span>
               </button>
-
             </div>
 
             {/* =================================================
@@ -523,11 +663,9 @@ function Roadmap() {
               <div className="bg-white rounded-3xl p-10 sm:p-14 text-center shadow-sm">
 
                 <div className="w-16 h-16 mx-auto rounded-full bg-[#e8e4da] flex items-center justify-center mb-5">
-
                   <span className="text-2xl">
                     🗺️
                   </span>
-
                 </div>
 
                 <h2 className="text-2xl font-Outfit font-bold">
@@ -535,15 +673,17 @@ function Roadmap() {
                 </h2>
 
                 <p className="text-gray-500 font-DM-Sans mt-2 max-w-md mx-auto">
-                  You don't currently have a roadmap in
-                  progress. Choose a business idea to start
-                  a new journey.
+                  You don't currently have a roadmap
+                  in progress. Choose a business idea
+                  to start a new journey.
                 </p>
 
                 <button
                   type="button"
                   onClick={() =>
-                    navigate("/learner/business-ideas")
+                    navigate(
+                      "/learner/business-ideas"
+                    )
                   }
                   className="
                     mt-6
@@ -560,7 +700,6 @@ function Roadmap() {
                 >
                   Explore Business Ideas
                 </button>
-
               </div>
             )}
 
@@ -572,11 +711,9 @@ function Roadmap() {
               <div className="bg-white rounded-3xl p-10 sm:p-14 text-center shadow-sm">
 
                 <div className="w-16 h-16 mx-auto rounded-full bg-[#e8e4da] flex items-center justify-center mb-5">
-
                   <span className="text-2xl">
                     🏆
                   </span>
-
                 </div>
 
                 <h2 className="text-2xl font-Outfit font-bold">
@@ -584,10 +721,10 @@ function Roadmap() {
                 </h2>
 
                 <p className="text-gray-500 font-DM-Sans mt-2">
-                  Complete your active roadmap and it will
-                  appear here as part of your history.
+                  Complete your active roadmap and it
+                  will appear here as part of your
+                  history.
                 </p>
-
               </div>
             )}
 
@@ -597,24 +734,23 @@ function Roadmap() {
 
             {activeSection === "completed" &&
               completedRoadmaps.length > 0 && (
-
                 <div className="mb-6">
 
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
                     {completedRoadmaps.map(
                       (item, index) => {
-
                         const selected =
-                          selectedCompletedRoadmap ===
-                          item;
+                          selectedCompletedRoadmap?._id ===
+                          item?._id;
 
                         const percentage =
-                          item?.roadmapProgress?.percentage ||
-                          0;
+                          item?.roadmapProgress
+                            ?.percentage || 0;
 
                         const title =
-                          item?.businessIdea?.title ||
+                          item?.businessIdea
+                            ?.title ||
                           item?.roadmap?.title ||
                           "Completed Roadmap";
 
@@ -640,12 +776,11 @@ function Roadmap() {
                               transition-all
                               ${
                                 selected
-                                  ? "border-[#c4662a] shadow-md"
+                                  ? "border-[#c4622a] shadow-md"
                                   : "border-transparent hover:border-[#e8e4da]"
                               }
                             `}
                           >
-
                             <div className="flex items-start justify-between gap-3">
 
                               <div className="min-w-0">
@@ -667,18 +802,18 @@ function Roadmap() {
                             </div>
 
                             <p className="text-sm text-gray-500 mt-2 font-DM-Sans">
-                              {item?.roadmap?.category ||
-                                item?.businessIdea?.category?.[0] ||
+                              {item?.roadmap
+                                ?.category ||
+                                item?.businessIdea
+                                  ?.category?.[0] ||
                                 "Business"}
                             </p>
-
                           </button>
                         );
                       }
                     )}
 
                   </div>
-
                 </div>
               )}
 
@@ -688,7 +823,6 @@ function Roadmap() {
 
             {roadmapToDisplay && (
               <>
-
                 {/* =================================================
                     WELCOME CARD
                 ================================================= */}
@@ -721,18 +855,20 @@ function Roadmap() {
 
                     <div className="flex items-start gap-3">
 
-                      <div className="
-                        w-10
-                        h-10
-                        shrink-0
-                        rounded-full
-                        bg-green-100
-                        text-green-600
-                        flex
-                        items-center
-                        justify-center
-                        text-lg
-                      ">
+                      <div
+                        className="
+                          w-10
+                          h-10
+                          shrink-0
+                          rounded-full
+                          bg-green-100
+                          text-green-600
+                          flex
+                          items-center
+                          justify-center
+                          text-lg
+                        "
+                      >
                         ✓
                       </div>
 
@@ -744,8 +880,9 @@ function Roadmap() {
 
                         <p className="text-sm text-green-700 font-DM-Sans mt-1">
                           This roadmap is part of your
-                          completed journey. You can review
-                          all of its steps and tasks here.
+                          completed journey. You can
+                          review all of its steps and
+                          tasks here.
                         </p>
 
                         {roadmapToDisplay.completedAt && (
@@ -765,9 +902,7 @@ function Roadmap() {
                         )}
 
                       </div>
-
                     </div>
-
                   </div>
                 )}
 
@@ -777,20 +912,30 @@ function Roadmap() {
 
                 <div className="mt-6 pb-12">
 
-                  {roadmapToDisplay.roadmap?.steps
-                    ?.length > 0 ? (
-
+                  {roadmapToDisplay.roadmap
+                    ?.steps?.length > 0 ? (
                     roadmapToDisplay.roadmap.steps.map(
                       (step) => (
                         <Step
                           key={step._id}
                           step={step}
+
                           completedTaskIds={
-                            completedTaskIds
+                            currentCompletedTaskIds
                           }
+
                           onTaskToggle={
                             handleTaskToggle
                           }
+
+                          completedResourceIds={
+                            currentCompletedResourceIds
+                          }
+
+                          onResourceToggle={
+                            handleResourceToggle
+                          }
+
                           readOnly={
                             activeSection ===
                             "completed"
@@ -798,31 +943,24 @@ function Roadmap() {
                         />
                       )
                     )
-
                   ) : (
-
                     <div className="bg-white rounded-2xl p-8 text-center">
 
                       <p className="text-gray-500 font-DM-Sans">
-                        No steps are available for this
-                        roadmap yet.
+                        No steps are available for
+                        this roadmap yet.
                       </p>
 
                     </div>
-
                   )}
 
                 </div>
-
               </>
             )}
 
           </div>
-
         </div>
-
       </main>
-
     </div>
   );
 }

@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-const AdminCreateRoadmap = () => {
+const AdminEditRoadmap = () => {
   const navigate = useNavigate();
+  const { roadmapId } = useParams();
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  const [businessIdeas, setBusinessIdeas] = useState([]);
   const [resources, setResources] = useState([]);
-
-  const [loadingResources, setLoadingResources] = useState(false);
-  const [loadingIdeas, setLoadingIdeas] = useState(true);
+  const [roadmapLoading, setRoadmapLoading] = useState(true);
+  const [resourcesLoading, setResourcesLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -25,15 +24,15 @@ const AdminCreateRoadmap = () => {
   });
 
   // ==========================================
-  // FETCH BUSINESS IDEAS
+  // FETCH ROADMAP
   // ==========================================
 
-  const fetchBusinessIdeas = async () => {
+  const fetchRoadmap = async () => {
     try {
-      setLoadingIdeas(true);
+      setRoadmapLoading(true);
 
       const response = await fetch(
-        `${API_URL}/api/admin/business-ideas/all`,
+        `${API_URL}/api/admin/roadmaps/${roadmapId}`,
         {
           method: "GET",
           credentials: "include",
@@ -43,26 +42,82 @@ const AdminCreateRoadmap = () => {
       const data = await response.json();
 
       if (!data.success) {
-        alert(data.message || "Failed to load business ideas.");
+        alert(data.message || "Failed to load roadmap.");
+        navigate("/admin/roadmaps");
         return;
       }
 
-      setBusinessIdeas(data.businessIdeas || []);
+      const roadmap = data.roadmap;
+
+      setFormData({
+        businessIdea:
+          roadmap.businessIdea?._id ||
+          roadmap.businessIdea ||
+          "",
+
+        title: roadmap.title || "",
+
+        category: roadmap.category || "",
+
+        level: roadmap.level || "Beginner",
+
+        investmentRange:
+          roadmap.investmentRange || "",
+
+        estimatedIncome:
+          roadmap.estimatedIncome || "",
+
+        estimatedDuration:
+          roadmap.estimatedDuration || "",
+
+        steps: (roadmap.steps || []).map((step) => ({
+          _id: step._id,
+
+          order: step.order,
+
+          title: step.title || "",
+
+          description: step.description || "",
+
+          tip: step.tip || "",
+
+          estimatedDays:
+            step.estimatedDays || 0,
+
+          estimatedCost:
+            step.estimatedCost || 0,
+
+          tasks: (step.tasks || []).map((task) => ({
+            _id: task._id,
+            title: task.title || "",
+          })),
+
+          resources: (step.resources || []).map(
+            (resource) =>
+              resource?._id || resource
+          ),
+        })),
+      });
     } catch (error) {
-      console.error("Error fetching business ideas:", error);
-      alert("Failed to load business ideas.");
+      console.error(
+        "Error fetching roadmap:",
+        error
+      );
+
+      alert("Failed to load roadmap.");
+      navigate("/admin/roadmaps");
     } finally {
-      setLoadingIdeas(false);
+      setRoadmapLoading(false);
     }
   };
 
   // ==========================================
-  // FETCH RESOURCES
+  // FETCH AVAILABLE RESOURCES
   // ==========================================
 
   const fetchResources = async () => {
     try {
-      setLoadingResources(true);
+      setResourcesLoading(true);
 
       const response = await fetch(
         `${API_URL}/api/admin/resources/available`,
@@ -75,26 +130,42 @@ const AdminCreateRoadmap = () => {
       const data = await response.json();
 
       if (!data.success) {
-        alert(data.message || "Failed to load resources.");
+        alert(
+          data.message ||
+            "Failed to load resources."
+        );
         return;
       }
 
       setResources(data.resources || []);
     } catch (error) {
-      console.error("Error fetching resources:", error);
+      console.error(
+        "Error fetching resources:",
+        error
+      );
+
       alert("Failed to load resources.");
     } finally {
-      setLoadingResources(false);
+      setResourcesLoading(false);
     }
   };
 
+  // ==========================================
+  // INITIAL LOAD
+  // ==========================================
+
   useEffect(() => {
-    fetchBusinessIdeas();
+    if (!roadmapId) {
+      navigate("/admin/roadmaps");
+      return;
+    }
+
+    fetchRoadmap();
     fetchResources();
-  }, []);
+  }, [roadmapId]);
 
   // ==========================================
-  // HANDLE BASIC INPUT
+  // BASIC INPUT
   // ==========================================
 
   const handleChange = (e) => {
@@ -107,25 +178,27 @@ const AdminCreateRoadmap = () => {
   };
 
   // ==========================================
-  // BUSINESS IDEA CHANGE
+  // UPDATE STEP
   // ==========================================
 
-  const handleBusinessIdeaChange = (e) => {
-    const businessIdeaId = e.target.value;
+  const updateStep = (
+    stepIndex,
+    field,
+    value
+  ) => {
+    setFormData((prev) => {
+      const updatedSteps = [...prev.steps];
 
-    const selectedIdea = businessIdeas.find(
-      (idea) => idea._id === businessIdeaId
-    );
+      updatedSteps[stepIndex] = {
+        ...updatedSteps[stepIndex],
+        [field]: value,
+      };
 
-    setFormData((prev) => ({
-      ...prev,
-      businessIdea: businessIdeaId,
-      title: selectedIdea?.title || "",
-      category:
-        selectedIdea?.category?.[0] ||
-        selectedIdea?.category ||
-        "",
-    }));
+      return {
+        ...prev,
+        steps: updatedSteps,
+      };
+    });
   };
 
   // ==========================================
@@ -135,8 +208,10 @@ const AdminCreateRoadmap = () => {
   const addStep = () => {
     setFormData((prev) => ({
       ...prev,
+
       steps: [
         ...prev.steps,
+
         {
           order: prev.steps.length + 1,
           title: "",
@@ -158,7 +233,10 @@ const AdminCreateRoadmap = () => {
   const removeStep = (stepIndex) => {
     setFormData((prev) => {
       const updatedSteps = prev.steps
-        .filter((_, index) => index !== stepIndex)
+        .filter(
+          (_, index) =>
+            index !== stepIndex
+        )
         .map((step, index) => ({
           ...step,
           order: index + 1,
@@ -172,30 +250,13 @@ const AdminCreateRoadmap = () => {
   };
 
   // ==========================================
-  // UPDATE STEP
+  // TOGGLE RESOURCE
   // ==========================================
 
-  const updateStep = (stepIndex, field, value) => {
-    setFormData((prev) => {
-      const updatedSteps = [...prev.steps];
-
-      updatedSteps[stepIndex] = {
-        ...updatedSteps[stepIndex],
-        [field]: value,
-      };
-
-      return {
-        ...prev,
-        steps: updatedSteps,
-      };
-    });
-  };
-
-  // ==========================================
-  // TOGGLE RESOURCE FOR STEP
-  // ==========================================
-
-  const toggleResource = (stepIndex, resourceId) => {
+  const toggleResource = (
+    stepIndex,
+    resourceId
+  ) => {
     setFormData((prev) => {
       const updatedSteps = [...prev.steps];
 
@@ -207,11 +268,15 @@ const AdminCreateRoadmap = () => {
 
       updatedSteps[stepIndex] = {
         ...updatedSteps[stepIndex],
+
         resources: alreadySelected
           ? currentResources.filter(
               (id) => id !== resourceId
             )
-          : [...currentResources, resourceId],
+          : [
+              ...currentResources,
+              resourceId,
+            ],
       };
 
       return {
@@ -231,8 +296,10 @@ const AdminCreateRoadmap = () => {
 
       updatedSteps[stepIndex] = {
         ...updatedSteps[stepIndex],
+
         tasks: [
           ...updatedSteps[stepIndex].tasks,
+
           {
             title: "",
           },
@@ -250,7 +317,11 @@ const AdminCreateRoadmap = () => {
   // UPDATE TASK
   // ==========================================
 
-  const updateTask = (stepIndex, taskIndex, value) => {
+  const updateTask = (
+    stepIndex,
+    taskIndex,
+    value
+  ) => {
     setFormData((prev) => {
       const updatedSteps = [...prev.steps];
 
@@ -279,15 +350,23 @@ const AdminCreateRoadmap = () => {
   // REMOVE TASK
   // ==========================================
 
-  const removeTask = (stepIndex, taskIndex) => {
+  const removeTask = (
+    stepIndex,
+    taskIndex
+  ) => {
     setFormData((prev) => {
       const updatedSteps = [...prev.steps];
 
       updatedSteps[stepIndex] = {
         ...updatedSteps[stepIndex],
-        tasks: updatedSteps[stepIndex].tasks.filter(
-          (_, index) => index !== taskIndex
-        ),
+
+        tasks:
+          updatedSteps[
+            stepIndex
+          ].tasks.filter(
+            (_, index) =>
+              index !== taskIndex
+          ),
       };
 
       return {
@@ -298,16 +377,11 @@ const AdminCreateRoadmap = () => {
   };
 
   // ==========================================
-  // CREATE ROADMAP
+  // SUBMIT UPDATE
   // ==========================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!formData.businessIdea) {
-      alert("Please select a business idea.");
-      return;
-    }
 
     if (!formData.title.trim()) {
       alert("Roadmap title is required.");
@@ -320,7 +394,9 @@ const AdminCreateRoadmap = () => {
     }
 
     if (formData.steps.length === 0) {
-      alert("Please add at least one roadmap step.");
+      alert(
+        "Roadmap must have at least one step."
+      );
       return;
     }
 
@@ -328,33 +404,73 @@ const AdminCreateRoadmap = () => {
       setSubmitting(true);
 
       const payload = {
-        ...formData,
+        title: formData.title.trim(),
 
-        steps: formData.steps.map((step) => ({
-          ...step,
+        category: formData.category.trim(),
 
-          estimatedDays:
-            Number(step.estimatedDays) || 0,
+        level: formData.level,
 
-          estimatedCost:
-            Number(step.estimatedCost) || 0,
+        investmentRange:
+          formData.investmentRange,
 
-          tasks: step.tasks.filter(
-            (task) => task.title.trim() !== ""
-          ),
+        estimatedIncome:
+          formData.estimatedIncome,
 
-          resources: step.resources || [],
-        })),
+        estimatedDuration:
+          formData.estimatedDuration,
+
+        steps: formData.steps.map(
+          (step) => ({
+            ...(step._id
+              ? { _id: step._id }
+              : {}),
+
+            order: step.order,
+
+            title: step.title.trim(),
+
+            description:
+              step.description || "",
+
+            tip: step.tip || "",
+
+            estimatedDays:
+              Number(step.estimatedDays) || 0,
+
+            estimatedCost:
+              Number(step.estimatedCost) || 0,
+
+            tasks: (step.tasks || [])
+              .filter(
+                (task) =>
+                  task.title &&
+                  task.title.trim() !== ""
+              )
+              .map((task) => ({
+                ...(task._id
+                  ? { _id: task._id }
+                  : {}),
+                title: task.title.trim(),
+              })),
+
+            resources:
+              step.resources || [],
+          })
+        ),
       };
 
       const response = await fetch(
-        `${API_URL}/api/admin/roadmaps`,
+        `${API_URL}/api/admin/roadmaps/${roadmapId}`,
         {
-          method: "POST",
+          method: "PUT",
+
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
           },
+
           credentials: "include",
+
           body: JSON.stringify(payload),
         }
       );
@@ -364,21 +480,25 @@ const AdminCreateRoadmap = () => {
       if (!data.success) {
         alert(
           data.message ||
-            "Failed to create roadmap."
+            "Failed to update roadmap."
         );
         return;
       }
 
-      alert("Roadmap created successfully.");
+      alert(
+        "Roadmap updated successfully."
+      );
 
       navigate("/admin/roadmaps");
     } catch (error) {
       console.error(
-        "Create roadmap error:",
+        "Update roadmap error:",
         error
       );
 
-      alert("Failed to create roadmap.");
+      alert(
+        "Failed to update roadmap."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -388,11 +508,14 @@ const AdminCreateRoadmap = () => {
   // LOADING
   // ==========================================
 
-  if (loadingIdeas) {
+  if (
+    roadmapLoading ||
+    resourcesLoading
+  ) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-gray-500">
-          Loading business ideas...
+          Loading roadmap...
         </p>
       </div>
     );
@@ -410,6 +533,7 @@ const AdminCreateRoadmap = () => {
       ================================== */}
 
       <div className="mb-8">
+
         <button
           type="button"
           onClick={() =>
@@ -421,13 +545,14 @@ const AdminCreateRoadmap = () => {
         </button>
 
         <h1 className="text-2xl font-bold text-gray-800">
-          Create Roadmap
+          Edit Roadmap
         </h1>
 
         <p className="text-gray-500 mt-1">
-          Create a step-by-step roadmap for a
-          business idea.
+          Update roadmap steps, tasks and
+          learning resources.
         </p>
+
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -447,37 +572,34 @@ const AdminCreateRoadmap = () => {
             {/* Business Idea */}
 
             <div className="md:col-span-2">
+
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business Idea *
+                Business Idea
               </label>
 
-              <select
-                name="businessIdea"
-                value={formData.businessIdea}
-                onChange={
-                  handleBusinessIdeaChange
+              <input
+                type="text"
+                value={
+                  formData.businessIdea
+                    ? "Existing Business Idea"
+                    : "Business Idea"
                 }
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-              >
-                <option value="">
-                  Select Business Idea
-                </option>
+                disabled
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-50 text-gray-500"
+              />
 
-                {businessIdeas.map((idea) => (
-                  <option
-                    key={idea._id}
-                    value={idea._id}
-                  >
-                    {idea.title}
-                  </option>
-                ))}
-              </select>
+              <p className="text-xs text-gray-400 mt-1">
+                Business idea is kept unchanged
+                to protect existing learner
+                progress.
+              </p>
+
             </div>
 
             {/* Title */}
 
             <div>
+
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Roadmap Title *
               </label>
@@ -487,15 +609,16 @@ const AdminCreateRoadmap = () => {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                placeholder="Example: Start a Home Tiffin Service"
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               />
+
             </div>
 
             {/* Category */}
 
             <div>
+
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Category *
               </label>
@@ -505,15 +628,16 @@ const AdminCreateRoadmap = () => {
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                placeholder="Example: Food & Catering"
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               />
+
             </div>
 
             {/* Level */}
 
             <div>
+
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Level
               </label>
@@ -524,6 +648,7 @@ const AdminCreateRoadmap = () => {
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
               >
+
                 <option value="Beginner">
                   Beginner
                 </option>
@@ -535,12 +660,15 @@ const AdminCreateRoadmap = () => {
                 <option value="Advanced">
                   Advanced
                 </option>
+
               </select>
+
             </div>
 
             {/* Investment */}
 
             <div>
+
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Investment Range
               </label>
@@ -548,16 +676,19 @@ const AdminCreateRoadmap = () => {
               <input
                 type="text"
                 name="investmentRange"
-                value={formData.investmentRange}
+                value={
+                  formData.investmentRange
+                }
                 onChange={handleChange}
-                placeholder="₹5,000 - ₹15,000"
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
               />
+
             </div>
 
             {/* Income */}
 
             <div>
+
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Estimated Income
               </label>
@@ -565,16 +696,19 @@ const AdminCreateRoadmap = () => {
               <input
                 type="text"
                 name="estimatedIncome"
-                value={formData.estimatedIncome}
+                value={
+                  formData.estimatedIncome
+                }
                 onChange={handleChange}
-                placeholder="₹15,000 - ₹40,000/month"
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
               />
+
             </div>
 
             {/* Duration */}
 
             <div>
+
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Estimated Duration
               </label>
@@ -582,14 +716,17 @@ const AdminCreateRoadmap = () => {
               <input
                 type="text"
                 name="estimatedDuration"
-                value={formData.estimatedDuration}
+                value={
+                  formData.estimatedDuration
+                }
                 onChange={handleChange}
-                placeholder="2 - 4 weeks"
                 className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
               />
+
             </div>
 
           </div>
+
         </div>
 
         {/* ==================================
@@ -601,14 +738,16 @@ const AdminCreateRoadmap = () => {
           <div className="flex items-center justify-between mb-5">
 
             <div>
+
               <h2 className="text-lg font-semibold text-gray-800">
                 Roadmap Steps
               </h2>
 
               <p className="text-sm text-gray-500 mt-1">
-                Add the steps learners need to
-                follow.
+                Update the steps learners
+                need to follow.
               </p>
+
             </div>
 
             <button
@@ -626,7 +765,7 @@ const AdminCreateRoadmap = () => {
             <div className="bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center">
 
               <p className="text-gray-500">
-                No steps added yet.
+                No steps available.
               </p>
 
               <button
@@ -647,13 +786,14 @@ const AdminCreateRoadmap = () => {
                 (step, stepIndex) => (
 
                   <div
-                    key={stepIndex}
+                    key={
+                      step._id ||
+                      stepIndex
+                    }
                     className="bg-white border border-gray-200 rounded-xl p-6"
                   >
 
-                    {/* ==================================
-                        STEP HEADER
-                    ================================== */}
+                    {/* STEP HEADER */}
 
                     <div className="flex items-center justify-between mb-5">
 
@@ -672,7 +812,9 @@ const AdminCreateRoadmap = () => {
                       <button
                         type="button"
                         onClick={() =>
-                          removeStep(stepIndex)
+                          removeStep(
+                            stepIndex
+                          )
                         }
                         className="text-sm text-red-500 hover:text-red-700"
                       >
@@ -681,9 +823,7 @@ const AdminCreateRoadmap = () => {
 
                     </div>
 
-                    {/* ==================================
-                        STEP FIELDS
-                    ================================== */}
+                    {/* STEP FIELDS */}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
@@ -705,8 +845,8 @@ const AdminCreateRoadmap = () => {
                               e.target.value
                             )
                           }
-                          placeholder="Example: Validate Your Business Idea"
                           className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
+                          required
                         />
 
                       </div>
@@ -720,7 +860,9 @@ const AdminCreateRoadmap = () => {
                         </label>
 
                         <textarea
-                          value={step.description}
+                          value={
+                            step.description
+                          }
                           onChange={(e) =>
                             updateStep(
                               stepIndex,
@@ -729,7 +871,6 @@ const AdminCreateRoadmap = () => {
                             )
                           }
                           rows="3"
-                          placeholder="Explain what the learner should do in this step..."
                           className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                         />
 
@@ -753,7 +894,6 @@ const AdminCreateRoadmap = () => {
                             )
                           }
                           rows="2"
-                          placeholder="Give a useful tip to the learner..."
                           className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                         />
 
@@ -770,7 +910,9 @@ const AdminCreateRoadmap = () => {
                         <input
                           type="number"
                           min="0"
-                          value={step.estimatedDays}
+                          value={
+                            step.estimatedDays
+                          }
                           onChange={(e) =>
                             updateStep(
                               stepIndex,
@@ -794,7 +936,9 @@ const AdminCreateRoadmap = () => {
                         <input
                           type="number"
                           min="0"
-                          value={step.estimatedCost}
+                          value={
+                            step.estimatedCost
+                          }
                           onChange={(e) =>
                             updateStep(
                               stepIndex,
@@ -824,8 +968,8 @@ const AdminCreateRoadmap = () => {
                           </h4>
 
                           <p className="text-sm text-gray-500">
-                            Add tasks learners should
-                            complete.
+                            Add tasks learners
+                            should complete.
                           </p>
 
                         </div>
@@ -833,7 +977,9 @@ const AdminCreateRoadmap = () => {
                         <button
                           type="button"
                           onClick={() =>
-                            addTask(stepIndex)
+                            addTask(
+                              stepIndex
+                            )
                           }
                           className="text-sm px-3 py-2 border border-indigo-200 text-indigo-600 rounded-lg hover:bg-indigo-50"
                         >
@@ -845,10 +991,16 @@ const AdminCreateRoadmap = () => {
                       <div className="space-y-3">
 
                         {step.tasks.map(
-                          (task, taskIndex) => (
+                          (
+                            task,
+                            taskIndex
+                          ) => (
 
                             <div
-                              key={taskIndex}
+                              key={
+                                task._id ||
+                                taskIndex
+                              }
                               className="flex items-center gap-3"
                             >
 
@@ -860,7 +1012,9 @@ const AdminCreateRoadmap = () => {
 
                               <input
                                 type="text"
-                                value={task.title}
+                                value={
+                                  task.title
+                                }
                                 onChange={(e) =>
                                   updateTask(
                                     stepIndex,
@@ -909,31 +1063,25 @@ const AdminCreateRoadmap = () => {
                           </h4>
 
                           <p className="text-sm text-gray-500 mt-1">
-                            Select resources that will
-                            help learners complete this
-                            step.
+                            Select resources that
+                            will help learners
+                            complete this step.
                           </p>
 
                         </div>
 
                         <span className="text-xs text-gray-500">
-                          {step.resources?.length || 0}{" "}
+                          {
+                            step.resources
+                              ?.length || 0
+                          }{" "}
                           selected
                         </span>
 
                       </div>
 
-                      {loadingResources ? (
-
-                        <div className="border border-gray-200 rounded-lg p-4">
-
-                          <p className="text-sm text-gray-500">
-                            Loading resources...
-                          </p>
-
-                        </div>
-
-                      ) : resources.length === 0 ? (
+                      {resources.length ===
+                      0 ? (
 
                         <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
 
@@ -943,8 +1091,8 @@ const AdminCreateRoadmap = () => {
                           </p>
 
                           <p className="text-xs text-gray-400 mt-1">
-                            Create, approve and publish
-                            resources first.
+                            Create, approve and
+                            publish resources first.
                           </p>
 
                         </div>
@@ -957,14 +1105,19 @@ const AdminCreateRoadmap = () => {
                             (resource) => {
 
                               const selected =
-                                step.resources?.includes(
+                                (
+                                  step.resources ||
+                                  []
+                                ).includes(
                                   resource._id
                                 );
 
                               return (
 
                                 <label
-                                  key={resource._id}
+                                  key={
+                                    resource._id
+                                  }
                                   className={`
                                     flex items-start gap-3
                                     p-3
@@ -982,7 +1135,9 @@ const AdminCreateRoadmap = () => {
 
                                   <input
                                     type="checkbox"
-                                    checked={selected}
+                                    checked={
+                                      selected
+                                    }
                                     onChange={() =>
                                       toggleResource(
                                         stepIndex,
@@ -997,18 +1152,24 @@ const AdminCreateRoadmap = () => {
                                     <div className="flex items-center gap-2">
 
                                       <p className="text-sm font-medium text-gray-800">
-                                        {resource.title}
+                                        {
+                                          resource.title
+                                        }
                                       </p>
 
                                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                                        {resource.type}
+                                        {
+                                          resource.type
+                                        }
                                       </span>
 
                                     </div>
 
                                     {resource.description && (
                                       <p className="text-xs text-gray-500 mt-1">
-                                        {resource.description}
+                                        {
+                                          resource.description
+                                        }
                                       </p>
                                     )}
 
@@ -1017,14 +1178,18 @@ const AdminCreateRoadmap = () => {
                                       {resource.estimatedDuration && (
                                         <p className="text-xs text-gray-400">
                                           Duration:{" "}
-                                          {resource.estimatedDuration}
+                                          {
+                                            resource.estimatedDuration
+                                          }
                                         </p>
                                       )}
 
                                       {resource.level && (
                                         <p className="text-xs text-gray-400">
                                           Level:{" "}
-                                          {resource.level}
+                                          {
+                                            resource.level
+                                          }
                                         </p>
                                       )}
 
@@ -1045,10 +1210,12 @@ const AdminCreateRoadmap = () => {
                     </div>
 
                   </div>
+
                 )
               )}
 
             </div>
+
           )}
 
         </div>
@@ -1075,8 +1242,8 @@ const AdminCreateRoadmap = () => {
             className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
           >
             {submitting
-              ? "Creating..."
-              : "Create Roadmap"}
+              ? "Saving..."
+              : "Save Changes"}
           </button>
 
         </div>
@@ -1087,4 +1254,4 @@ const AdminCreateRoadmap = () => {
   );
 };
 
-export default AdminCreateRoadmap;
+export default AdminEditRoadmap;
