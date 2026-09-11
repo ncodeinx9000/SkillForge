@@ -94,7 +94,7 @@ function MentorDashboard() {
 
         {activeTab === "Resources" && <MentorResources />}
 
-        {activeTab === "Q&Q" && <MentorQA />}
+        {activeTab === "Q&A" && <MentorQA />}
 
         {activeTab === "Analytics" && <MentorAnalytics />}
 

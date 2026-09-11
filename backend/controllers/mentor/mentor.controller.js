@@ -1,5 +1,5 @@
 import  {Mentor}  from "../../models/mentor.model.js";
-
+import { LearnerProgress } from "../../models/learnerProgress.model.js";
 
 // Create mentor profile
 export const createMentorProfile = async (req, res) => {
@@ -204,6 +204,72 @@ export const updateMentorProfile = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Failed to update mentor profile",
+        });
+    }
+};
+
+export const getMyMentees = async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        // Find mentor profile of logged-in user
+        const mentor = await Mentor.findOne({
+            user: userId,
+        });
+
+        if (!mentor) {
+            return res.status(404).json({
+                success: false,
+                message: "Mentor profile not found",
+            });
+        }
+
+        // Find active learner progress where this mentor
+        // has been booked
+        const mentees = await LearnerProgress.find({
+            bookedMentor: mentor._id,
+            status: "Active",
+        })
+            .populate("learner", "name email profileImage")
+            .populate("businessIdea", "title category")
+            .populate("roadmap", "title steps");
+
+        const formattedMentees = mentees.map((progress) => ({
+            learner: progress.learner,
+            businessIdea: progress.businessIdea,
+            roadmap: progress.roadmap,
+
+            roadmapProgress: progress.roadmapProgress || 0,
+
+            currentStep: progress.currentStep,
+
+            completedSteps:
+                progress.completedSteps?.length || 0,
+
+            completedTasks:
+                progress.completedTask?.length || 0,
+
+            resourceProgress:
+                progress.resourceProgress || {
+                    completed: 0,
+                    total: 0,
+                    percentage: 0,
+                },
+
+            startedAt: progress.startedAt,
+        }));
+
+        return res.status(200).json({
+            success: true,
+            mentees: formattedMentees,
+        });
+
+    } catch (error) {
+        console.error("Get mentor mentees error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message,
         });
     }
 };

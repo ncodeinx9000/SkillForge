@@ -49,8 +49,8 @@ app.use("/api/businessIdea", businessIdeaRouter);
 app.use("/api/progress", progressRouter);
 
 // Mentor
-app.use("/api/mentors", mentorRouter);
-app.use("/api/sessions", sessionRouter);
+app.use("/api/mentor", mentorRouter);
+app.use("/api/session", sessionRouter);
 app.use("/api/questions", questionRouter);
 app.use("/api/reviews", reviewRouter);
 
@@ -72,4 +72,12 @@ const port = process.env.PORT || 8000;
 app.listen(port, () => {
   connectDb();
   console.log(`Example app listening on port ${port}`);
+});
+
+
+app.get("/api/test", (req, res) => {
+    res.json({
+        success: true,
+        message: "Backend is running correctly"
+    });
 });

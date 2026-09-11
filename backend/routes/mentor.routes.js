@@ -6,6 +6,7 @@ import {
     getMentorById,
     getAllMentors,
     updateMentorProfile,
+    getMyMentees,
 } from "../controllers/mentor/mentor.controller.js";
 
 import { isAuthenticated } from "../middleware/auth.js";
@@ -34,6 +35,12 @@ mentorRouter.get(
     "/all",
     isAuthenticated,
     getAllMentors
+);
+
+mentorRouter.get(
+    "/mentees",
+    isAuthenticated,
+    getMyMentees
 );
 
 

@@ -44,6 +44,7 @@ import AdminEditRoadmap from "./pages/admin/AdminEditRoadmap";
 import AdminLearners from "./pages/admin/AdminLearners";
 import AdminLearnerDetails from "./pages/admin/AdminLearnerDetails";
 import AdminBusinessIdeaDetails from "./pages/admin/AdminBusinessIdeaDetails";
+import AdminEditBusinessIdea from "./pages/admin/AdminEditBusinessIdea";
 
 function App() {
   return (
@@ -139,7 +140,7 @@ function App() {
           <Route path="roadmaps/create" element={<AdminCreateRoadmap />} />
 
           <Route
-            path="/admin/roadmaps/:roadmapId/edit"
+            path="roadmaps/:roadmapId/edit"
             element={<AdminEditRoadmap />}
           />
 
@@ -151,17 +152,22 @@ function App() {
 
           <Route path="profile" element={<AdminProfile />} />
 
-          <Route path="/admin/learners" element={<AdminLearners />} />
+          <Route path="learners" element={<AdminLearners />} />
 
           <Route
-            path="/admin/learners/:learnerId"
+            path="learners/:learnerId"
             element={<AdminLearnerDetails />}
           />
 
           <Route
-    path="/admin/business-ideas/:ideaId"
-    element={<AdminBusinessIdeaDetails />}
-/>
+            path="business-ideas/:ideaId"
+            element={<AdminBusinessIdeaDetails />}
+          />
+
+          <Route
+            path="business-ideas/:ideaId/edit"
+            element={<AdminEditBusinessIdea />}
+          />
         </Route>
       </Route>
 

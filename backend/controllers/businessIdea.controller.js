@@ -315,7 +315,9 @@ export const selectBusinessIdea = async (req, res) => {
         businessIdea.roadmap.steps?.length > 0
           ? businessIdea.roadmap.steps[0]._id
           : null,
-      bookedMentor: [],
+      bookedMentor: businessIdea.mentor
+    ? [businessIdea.mentor]
+    : [],
       startedAt: new Date(),
     });
 
