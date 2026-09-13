@@ -27,6 +27,7 @@ import adminUserRouter from "./routes/admin/adminUser.routes.js";
 import adminReportRouter from "./routes/admin/adminReport.routes.js";
 import adminProfileRouter from "./routes/admin/adminProfile.routes.js";
 import reportRouter from "./routes/report.routes.js";
+import publicRouter from "./routes/public.routes.js";
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use(
 
 // Authentication & onboarding
 app.use("/api/auth", authRouter);
+app.use("/api/public", publicRouter);
 app.use("/api/onboarding", onBoardRouter);
 
 // Learner

@@ -9,7 +9,7 @@ function BusinessIdeaCard({
   para,
 }) {
   return (
-    <div className="lg:w-1/4 bg-[#fff] px-5 rounded-2xl">
+    <div className="w-full h-full bg-[#fff] px-5 rounded-2xl flex flex-col">
       <div className="mb-4 border-b border-b-gray-300 py-6 px-4">
         <div className={`${iconBgColor} w-10 py-3 px-3 rounded-xl mb-2`}>
           <Icon className={`${iconTextColor}`} />
@@ -20,7 +20,7 @@ function BusinessIdeaCard({
         </p>
         <p className="text-[12px] text-gray-600">{para}</p>
       </div>
-      <div className="flex items-center justify-between px-4 mb-4">
+      <div className="mt-auto flex items-center justify-between px-4 mb-4">
         <p
           className={`text-[11px] font-DM-Sans font-semibold ${iconBgColor} ${iconTextColor} py-1 px-2 rounded-xl`}
         >

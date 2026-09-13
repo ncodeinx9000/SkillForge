@@ -32,12 +32,33 @@ import { PiBag } from "react-icons/pi";
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import RoleCard from "../components/RoleCard";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import api from "../lib/axios";
 
 function Home() {
   const navigate = useNavigate();
+  const [homeData, setHomeData] = useState({ stats: {}, ideas: [], mentors: [], resources: [] });
+  const [homeLoading, setHomeLoading] = useState(true);
+  const [homeError, setHomeError] = useState("");
+
+  useEffect(() => {
+    api.get("/public/home")
+      .then((response) => setHomeData(response.data))
+      .catch((error) => {
+        console.error("Failed to load home data:", error);
+        setHomeError("Live platform data is temporarily unavailable. Please try again shortly.");
+      })
+      .finally(() => setHomeLoading(false));
+  }, []);
+
+  const stats = homeData.stats || {};
+  const featuredIdea = homeData.ideas[0];
+  const featuredRoadmap = featuredIdea?.roadmap;
+  const categories = [...new Set(homeData.ideas.flatMap((idea) => idea.category || []))].slice(0, 6);
   return (
     <>
       <Header />
+      {homeError && <div className="fixed left-0 right-0 top-20 z-20 bg-red-50 px-5 py-3 text-center text-sm text-red-700">{homeError}</div>}
       {/* Hero Section*/}
       <section className="relative overflow-hidden bg-[#f5f2eb] mt-20  py-15">
         <img
@@ -66,28 +87,12 @@ function Home() {
             </p>
 
             <div className="flex flex-wrap gap-x-4 gap-y-2 w-200 mb-8">
-              <div className="bg-[#ffffff] border border-gray-400 px-2 py-1 text-[13px] font-DM-Sans font-semibold rounded-full">
-                Tailoring & Fashion
-              </div>
-              <div className="bg-[#ffffff] border border-gray-400 px-2 py-1 text-[13px] font-DM-Sans font-semibold rounded-full">
-                Food & Catering
-              </div>
-              <div className="bg-[#ffffff] border border-gray-400 px-2 py-1 text-[13px] font-DM-Sans font-semibold rounded-full">
-                Handicrafts & Art
-              </div>
-              <div className="bg-[#ffffff] border border-gray-400 px-2 py-1 text-[13px] font-DM-Sans font-semibold rounded-full">
-                Digital & Tech
-              </div>
-              <div className="bg-[#ffffff] border border-gray-400 px-2 py-1 text-[13px] font-DM-Sans font-semibold rounded-full">
-                Repair Services
-              </div>
-              <div className="bg-[#ffffff] border border-gray-400 px-2 py-1 text-[13px] font-DM-Sans font-semibold rounded-full">
-                Retail & Trading
-              </div>
+              {categories.map((category) => <div key={category} className="bg-[#ffffff] border border-gray-400 px-2 py-1 text-[13px] font-DM-Sans font-semibold rounded-full">{category}</div>)}
+              {categories.length === 0 && <p className="text-sm text-gray-600">Explore published business opportunities and mentor guidance.</p>}
             </div>
 
             <div className="flex items-center gap-4">
-              <button className="flex items-center gap-2 bg-[#c4622a] text-white text-sm font-semibold px-8 py-3 rounded-xl font-DM-Sans hover:bg-[#e4864f] transition-colors">
+              <button onClick={() => navigate("/signup")} className="flex items-center gap-2 bg-[#c4622a] text-white text-sm font-semibold px-8 py-3 rounded-xl font-DM-Sans hover:bg-[#e4864f] transition-colors">
                 Discover My Business <FaArrowRightLong />
               </button>
 
@@ -105,19 +110,19 @@ function Home() {
       <div className="relative z-10 w-full mx-auto bg-green-900 text-white">
         <div className="grid grid-cols-2 md:flex flex-wrap gap-y-6 justify-around font-Outfit py-5 ">
           <div className="text-center">
-            <p className="text-2xl font-bold">12,400+</p>
+            <p className="text-2xl font-bold">{stats.learners || 0}</p>
             <p className="text-sm text-gray-300">Entrepreneurs Trained</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold">340+</p>
+            <p className="text-2xl font-bold">{stats.mentors || 0}</p>
             <p className="text-sm text-gray-300">Expert Mentors</p>
           </div>
           <div className=" text-center">
-            <p className="text-2xl font-bold">80+</p>
+            <p className="text-2xl font-bold">{stats.roadmaps || 0}</p>
             <p className="text-sm text-gray-300">Business Roadmaps</p>
           </div>
           <div className=" text-center">
-            <p className="text-2xl font-bold">90%</p>
+            <p className="text-2xl font-bold">{stats.completionRate ?? "—"}</p>
             <p className="text-sm text-gray-300">Complete Rate</p>
           </div>
         </div>
@@ -238,45 +243,13 @@ function Home() {
                 href=""
                 className="flex items-center text-[#c4622a] text-[14px] font-DM-Sans tracking-wide font-bold"
               >
-                Browse all 80+ ideas <MdKeyboardArrowRight />
+                Browse all {homeData.ideas.length} ideas <MdKeyboardArrowRight />
               </a>
             </div>
           </div>
 
-          <div className="lg:flex lg:items-center lg:justify-between grid grid-cols-2 gap-6">
-            <BusinessIdeaCard
-              icon={FiScissors}
-              iconBgColor="bg-pink-200"
-              iconTextColor="text-pink-800"
-              name="Tailoring"
-              description="Custom Boutique & Alterations"
-              para="Transform your stitching skills into a neighbourhood boutique."
-            />
-            <BusinessIdeaCard
-              icon={BsForkKnife}
-              iconBgColor="bg-orange-200"
-              iconTextColor="text-orange-800"
-              name="Food & Catering"
-              description="Home Tiffin Service"
-              para="Monetise your cooking by delivering fresh, home-cooked meals."
-            />
-            <BusinessIdeaCard
-              icon={BiJoystickButton}
-              iconBgColor="bg-blue-200"
-              iconTextColor="text-blue-800"
-              name="Digital Skills"
-              description="Freelance Graphic Design Studio"
-              para=" Offer logo design, creatives, and brand kits to local
-                businesses."
-            />
-            <BusinessIdeaCard
-              icon={LuPaintbrush}
-              iconBgColor="bg-purple-200"
-              iconTextColor="text-purple-800"
-              name="Handicrafts"
-              description="Handmade Jewellery & Gifting"
-              para=" Sell handcrafted jewellery and gift hampers via Instagram."
-            />
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {homeLoading ? <p className="text-sm text-gray-500">Loading published ideas...</p> : homeData.ideas.length === 0 ? <p className="text-sm text-gray-500">No published business ideas yet.</p> : homeData.ideas.slice(0, 4).map((idea, index) => <BusinessIdeaCard key={idea._id} icon={[FiScissors, BsForkKnife, BiJoystickButton, LuPaintbrush][index % 4]} iconBgColor={["bg-pink-200", "bg-orange-200", "bg-blue-200", "bg-purple-200"][index % 4]} iconTextColor={["text-pink-800", "text-orange-800", "text-blue-800", "text-purple-800"][index % 4]} name={idea.category?.join(" & ") || "Business"} description={idea.title} para={idea.description} />)}
           </div>
         </div>
       </div>
@@ -332,13 +305,15 @@ function Home() {
           <div className="lg:w-1/2 flex items-start justify-between border border-gray-600 bg-[#3e663e6e] px-10 py-5 rounded-2xl">
             <div>
               <h4 className="font-DM-Sans text-white text-[16px] font-semibold">
-                Home Tiffin Service
+                {featuredIdea?.title || "Your business roadmap"}
               </h4>
               <p className="font-DM-Sans text-[13px] text-amber-100 mb-4">
-                Food & Catering · Beginner
+                {(featuredIdea?.category || ["Business"])[0]} · {featuredIdea?.difficulty || "Beginner"}
               </p>
               <ul className="flex flex-col gap-4">
-                <li>
+                {featuredRoadmap?.steps?.slice(0, 5).map((step) => <li key={step._id}><div className="flex items-center gap-2"><FaRegCheckCircle className="text-amber-200" /><p className="text-[14px] text-gray-300">{step.title}</p></div></li>)}
+                {!featuredRoadmap && <li><p className="text-sm text-gray-400">Select a published idea to see its roadmap.</p></li>}
+                <li className="hidden">
                   <div className="flex items-center gap-2 ">
                     <FaRegCheckCircle className="text-amber-200" />
                     <p className="line-through text-[14px] text-gray-400">
@@ -346,7 +321,7 @@ function Home() {
                     </p>
                   </div>
                 </li>
-                <li>
+                <li className="hidden">
                   <div className="flex items-center gap-2 ">
                     <FaRegCheckCircle className="text-amber-200" />
                     <p className="line-through text-[14px] text-gray-400">
@@ -354,7 +329,7 @@ function Home() {
                     </p>
                   </div>
                 </li>
-                <li>
+                <li className="hidden">
                   <div className="flex items-center gap-2 text-white">
                     <div className="text-black text-[11px] bg-white px-1.5 rounded-[50%]">
                       3
@@ -362,7 +337,7 @@ function Home() {
                     <p className="text-[14px]">Legal & MSME Registration</p>
                   </div>
                 </li>
-                <li>
+                <li className="hidden">
                   <div className="flex items-center gap-2">
                     <div className="bg-gray-600 text-gray-400 text-[11px]  px-1.5 rounded-[50%]">
                       4
@@ -370,7 +345,7 @@ function Home() {
                     <p className="text-[14px] text-gray-400">Cost Estimation</p>
                   </div>
                 </li>
-                <li>
+                <li className="hidden">
                   <div className="flex items-center gap-2 ">
                     <div className="text-gray-400 bg-gray-600 text-[11px] px-1.5 rounded-[50%]">
                       5
@@ -383,7 +358,7 @@ function Home() {
               </ul>
             </div>
             <div className="text-white text-[25px] font-Outfit font-extrabold">
-              40%
+              {featuredRoadmap ? `${featuredRoadmap.steps?.length || 0} steps` : "—"}
             </div>
           </div>
         </div>
@@ -403,52 +378,11 @@ function Home() {
               </p>
             </div>
             <div className="flex item text-[#c4622a] text-[14px] font-DM-Sans tracking-wide font-bold">
-              Browse all 340+ mentors
+              Browse all {homeData.mentors.length} mentors
               <MdKeyboardArrowRight />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-6">
-            <MentorCard
-              name="Sunita Rao"
-              speciality="Textile & Fashion Entrepreneur"
-              location="Jaipur"
-              skill1="Tailoring"
-              skill2="Women Entrepreneurship"
-              mentees="87"
-              sessions="214"
-              rating="4.9"
-            />
-            <MentorCard
-              name="Rajan Pillai"
-              speciality="Food Business Coach"
-              location="Kochi"
-              skill1="F&B"
-              skill2="FSSAI Compliance"
-              mentees="124"
-              sessions="301"
-              rating="4.8"
-            />
-            <MentorCard
-              name="Divya Sharma"
-              speciality="Digital Marketing Strategist"
-              location="Bengaluru"
-              skill1="Social Media"
-              skill2="Freelancing"
-              mentees="198"
-              sessions="447"
-              rating="5"
-            />
-            <MentorCard
-              name="Arif Khan"
-              speciality="MSME & Legal Advisor"
-              location="Lucknow"
-              skill1="MSME Registration"
-              skill2="Taxation"
-              mentees="63"
-              sessions="156"
-              rating="4.7"
-            />
-          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">{homeLoading ? <p className="text-sm text-gray-500">Loading verified mentors...</p> : homeData.mentors.length === 0 ? <p className="text-sm text-gray-500">No verified mentors are available yet.</p> : homeData.mentors.slice(0, 4).map((mentor) => <MentorCard key={mentor._id} name={mentor.user?.name || "Mentor"} speciality={mentor.title} location={mentor.location || "Location not set"} skill1={mentor.expertise?.[0] || "Entrepreneurship"} skill2={mentor.expertise?.[1] || "Business Strategy"} mentees={mentor.totalMentees || 0} sessions={mentor.totalSessions || 0} rating={Number(mentor.rating || 0).toFixed(1)} />)}</div>
         </div>
       </div>
 
@@ -470,40 +404,7 @@ function Home() {
               <MdKeyboardArrowRight />
             </a>
           </div>
-          <div className="grid grid-cols-2 gap-6">
-            <LearningCard
-              icon={CiPlay1}
-              iconBgColor="bg-pink-200"
-              iconTextColor="text-pink-900"
-              fileName="VIDEO IDEATION"
-              topics="How to Validate Your Business Idea in 7 Days"
-              duration="18 min "
-            />
-            <LearningCard
-              icon={GrDocumentText}
-              iconBgColor="bg-blue-200"
-              iconTextColor="text-blue-900"
-              fileName="ARTICLE LEGAL"
-              topics="MSME Udyam Registration - Complete Guide 2026"
-              duration="8 min read"
-            />
-            <LearningCard
-              icon={TbClipboardList}
-              iconBgColor="bg-green-200"
-              iconTextColor="text-green-900"
-              fileName="CHECKLIST OPERATIONS"
-              topics="Pre-Launch Compliance Checklist"
-              duration="15 items"
-            />
-            <LearningCard
-              icon={CiPlay1}
-              iconBgColor="bg-pink-200"
-              iconTextColor="text-pink-900"
-              fileName="VIDEO IDEATION"
-              topics="Pricing Your Product or Service for Profit"
-              duration="22 min"
-            />
-          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">{homeLoading ? <p className="text-sm text-gray-500">Loading published resources...</p> : homeData.resources.length === 0 ? <p className="text-sm text-gray-500">No published resources are available yet.</p> : homeData.resources.slice(0, 4).map((resource, index) => <LearningCard key={resource._id} icon={resource.type === "Video" ? CiPlay1 : resource.type === "Article" ? GrDocumentText : TbClipboardList} iconBgColor={["bg-pink-200", "bg-blue-200", "bg-green-200"][index % 3]} iconTextColor={["text-pink-900", "text-blue-900", "text-green-900"][index % 3]} fileName={resource.type.toUpperCase()} topics={resource.title} duration={resource.estimatedDuration || resource.category || "Self-paced"} />)}</div>
         </div>
       </div>
 
@@ -551,7 +452,7 @@ function Home() {
           </p>
           <p className="text-gray-200 text-center mb-6">
             Your skills deserve a structured path to a real business. Join
-            12,400+ micro-entrepreneurs on EntreSkill Hub.
+            {stats.learners || 0} learners are building their next opportunity on SkillForge.
           </p>
           <div className="flex items-center justify-center gap-6 mb-4">
             <p className="bg-white text-[#c4622a] font-DM-Sans text-[13px] font-semibold px-8 py-3 rounded-xl">
