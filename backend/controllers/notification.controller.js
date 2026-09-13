@@ -26,16 +26,19 @@ export const getLearnerNotifications = async (req, res) => {
 // GET unread notifications
 export const getUnreadLearnerNotifications = async(req, res) => {
     try {
-        const notifications = await Notification.find({
+        const query = {
             recipient: req.userId,
             isRead: false,
-        })
-        .sort({createdAt: -1})
-        .populate("sender", "name profilePicture");
+        };
+        const [notifications, unreadCount] = await Promise.all([
+            Notification.find(query).sort({createdAt: -1}).populate("sender", "name profilePicture"),
+            Notification.countDocuments(query),
+        ]);
 
         return res.status(200).json({
             success: true,
             notifications,
+            unreadCount,
         })
     } catch (error) {
         return res.status(500).json({
@@ -68,6 +71,11 @@ export const markNotificationAsRead = async(req, res) => {
                 message:"Notification not found",
             });
         }
+
+        return res.status(200).json({
+            success: true,
+            notification,
+        });
     } catch (error) {
         return res.status(500).json({
             success: false,

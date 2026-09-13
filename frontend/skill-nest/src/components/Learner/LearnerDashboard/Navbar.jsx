@@ -1,5 +1,5 @@
 import { CiSearch } from "react-icons/ci";
-import { IoMdNotificationsOutline } from "react-icons/io";
+import NotificationBell from "../../Notifications/NotificationBell";
 
 function Navbar({ showSidebar }) {
   return (
@@ -66,7 +66,7 @@ function Navbar({ showSidebar }) {
           </div>
 
           {/* Notification */}
-          <IoMdNotificationsOutline className="text-[22px]" />
+          <NotificationBell />
 
         </div>
       </div>

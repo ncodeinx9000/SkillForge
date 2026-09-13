@@ -1,4 +1,5 @@
 import { Mentor } from "../../models/mentor.model.js";
+import { Notification } from "../../models/notification.model.js";
 
 
 // GET all mentors
@@ -88,6 +89,7 @@ export const approveMentor = async (req, res) => {
         mentor.verificationStatus = "verified";
 
         await mentor.save();
+        await Notification.create({ recipient: mentor.user, type: "system", title: "Mentor profile approved", message: "Your mentor profile is now verified and visible to learners." });
 
         return res.status(200).json({
             success: true,
@@ -123,6 +125,7 @@ export const rejectMentor = async (req, res) => {
         mentor.verificationStatus = "rejected";
 
         await mentor.save();
+        await Notification.create({ recipient: mentor.user, type: "system", title: "Mentor profile rejected", message: "Your mentor profile was rejected. Update it and resubmit for review." });
 
         return res.status(200).json({
             success: true,

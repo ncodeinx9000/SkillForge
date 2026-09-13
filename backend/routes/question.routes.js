@@ -8,6 +8,7 @@ import {
 } from "../controllers/mentor/question.controller.js";
 
 import { isAuthenticated } from "../middleware/auth.js";
+import { isLearner, isMentor } from "../middleware/role.js";
 
 const questionRouter = express.Router();
 
@@ -16,6 +17,7 @@ const questionRouter = express.Router();
 questionRouter.post(
     "/create",
     isAuthenticated,
+    isLearner,
     createQuestion
 );
 
@@ -24,6 +26,7 @@ questionRouter.post(
 questionRouter.get(
     "/learner/all",
     isAuthenticated,
+    isLearner,
     getLearnerQuestions
 );
 
@@ -32,6 +35,7 @@ questionRouter.get(
 questionRouter.get(
     "/mentor/all",
     isAuthenticated,
+    isMentor,
     getMentorQuestions
 );
 
@@ -40,6 +44,7 @@ questionRouter.get(
 questionRouter.patch(
     "/:questionId/answer",
     isAuthenticated,
+    isMentor,
     answerQuestion
 );
 

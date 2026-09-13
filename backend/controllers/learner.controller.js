@@ -1,5 +1,8 @@
 import { LearnerProgress } from "../models/learnerProgress.model.js";
 import { User } from "../models/user.model.js";
+import { Session } from "../models/session.model.js";
+import { Notification } from "../models/notification.model.js";
+import { LearnerProfile } from "../models/LearnerProfile.js";
 
 export const getLearnerDashboard = async (req, res) => {
   try {
@@ -7,6 +10,7 @@ export const getLearnerDashboard = async (req, res) => {
 
     // Find learner
     const learner = await User.findById(learnerId).select("-password");
+    const learnerProfile = await LearnerProfile.findOne({ user: learnerId }).select("skills interests budget location");
 
     if (!learner) {
       return res.status(404).json({
@@ -23,20 +27,20 @@ export const getLearnerDashboard = async (req, res) => {
     })
       .sort({ updatedAt: -1 })
       .populate("businessIdea")
-      .populate("roadmap")
+      .populate({ path: "roadmap", populate: { path: "steps.resources" } })
       .populate("bookedMentor");
 
-    if (!progress) {
-      return res.status(404).json({
-        success: false,
-        message: "No roadmap found",
-      });
-    }
+    const [sessions, unreadNotifications] = await Promise.all([
+      Session.find({ learner: learnerId, status: { $in: ["pending", "confirmed"] } })
+        .populate({ path: "mentor", populate: { path: "user", select: "name profilePicture" } })
+        .sort({ date: 1 }).limit(5),
+      Notification.countDocuments({ recipient: learnerId, isRead: false }),
+    ]);
 
-    if (!progress.roadmap) {
-      return res.status(404).json({
-        success: false,
-        message: "Roadmap not assigned to this business idea",
+    if (!progress) {
+      return res.status(200).json({
+        success: true,
+        dashboard: { learner: { ...learner.toObject(), interests: learnerProfile?.interests || [], skills: learnerProfile?.skills || [], budget: learnerProfile?.budget || "", location: learnerProfile?.location || "" }, businessIdea: null, roadmap: null, roadmapProgress: 0, currentStep: null, status: null, completedSteps: 0, completedTasks: 0, completedResources: 0, bookedMentor: [], sessions, unreadNotifications },
       });
     }
 
@@ -44,7 +48,7 @@ export const getLearnerDashboard = async (req, res) => {
       success: true,
 
       dashboard: {
-        learner,
+        learner: { ...learner.toObject(), interests: learnerProfile?.interests || [], skills: learnerProfile?.skills || [], budget: learnerProfile?.budget || "", location: learnerProfile?.location || "" },
 
         businessIdea: progress.businessIdea,
 
@@ -62,6 +66,8 @@ export const getLearnerDashboard = async (req, res) => {
         completedTasks:
           progress.completedTask?.length || 0,
 
+        completedResources: progress.completedResources?.length || 0,
+
         // Send actual completed task IDs to frontend
         completedTaskIds:
           (progress.completedTask || []).map(
@@ -70,6 +76,9 @@ export const getLearnerDashboard = async (req, res) => {
 
         bookedMentor:
           progress.bookedMentor || [],
+
+        sessions,
+        unreadNotifications,
       },
     });
   } catch (error) {

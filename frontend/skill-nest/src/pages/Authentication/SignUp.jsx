@@ -27,11 +27,6 @@ function SignUp() {
 
   const handleSignUp = async () => {
     try {
-      if(!selectedRole){
-        alert("Please select a role");
-        return;
-      }
-
       if(password !== confirmPassword){
         alert("Passwords do not match");
         return;
@@ -42,7 +37,6 @@ function SignUp() {
           name: fullName,
           email,
           password,
-          role: selectedRole,
         },
         {
           withCredentials: true,

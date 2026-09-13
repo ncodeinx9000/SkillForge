@@ -1,4 +1,5 @@
 import { Resource } from "../../models/resource.model.js";
+import { Notification } from "../../models/notification.model.js";
 
 
 // CREATE RESOURCE
@@ -322,6 +323,8 @@ export const approveResource = async (req, res) => {
             });
         }
 
+        await Notification.create({ recipient: resource.createdBy, type: "resource", title: "Resource approved", message: "Your resource was approved by an admin.", relatedId: resource._id, relatedModel: "Resource" });
+
         return res.status(200).json({
             success: true,
             message: "Resource approved successfully",
@@ -363,6 +366,8 @@ export const rejectResource = async (req, res) => {
                 message: "Resource not found",
             });
         }
+
+        await Notification.create({ recipient: resource.createdBy, type: "resource", title: "Resource rejected", message: "Your resource was rejected and needs changes.", relatedId: resource._id, relatedModel: "Resource" });
 
         return res.status(200).json({
             success: true,

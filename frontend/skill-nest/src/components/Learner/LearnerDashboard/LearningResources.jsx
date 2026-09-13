@@ -1,87 +1,10 @@
 import { GoDash } from "react-icons/go";
-import { MdArrowRightAlt } from "react-icons/md";
-import { FiPlay } from "react-icons/fi";
-import { BsFileEarmarkPostFill } from "react-icons/bs";
-import { LuClipboardList } from "react-icons/lu";
+import { useNavigate } from "react-router-dom";
 
-function LearningResources(){
-    return(
-        <div className="bg-[#fff] px-6 py-6 rounded-2xl mb-4">
-                  <div className="flex items-center gap-2 text-[11px] font-DM-Sans font-semibold text-[#c4622a] mb-1.5">
-                    <GoDash />
-                    <p>CONTINUE LEARNING</p>
-                  </div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[17px] font-Outfit font-extrabold">
-                      Your resources
-                    </h3>
-                    <div className="flex items-center gap-1 text-[13px] text-[#c4622a] font-DM-Sans font-semibold">
-                      <p>View all</p>
-                      <MdArrowRightAlt />
-                    </div>
-                  </div>
-        
-                  <div className="lg:grid lg:grid-cols-3 gap-4">
-                    <div className="bg-[#f5f2eb] px-6 py-6 rounded-2xl mb-4">
-                      <div className="mb-3 text-[11px] font-DM-Sans">
-                        <div className="bg-pink-100 font-semibold w-9 px-2.5 py-2.5 rounded-xl">
-                          <FiPlay className="text-[15px] text-pink-700 font-DM-Sans" />
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-gray-500 font-DM-Sans font-semibold mb-1">
-                        VIDEO
-                      </p>
-                      <p className="text-[14px] font-DM-Sans font-semibold mb-1">
-                        How to Validate Your Business Idea in 7 Days
-                      </p>
-                      <div className="bg-[#c4622a] w-full py-[3px] rounded-2xl mb-1"></div>
-                      <p className="text-[12px] font-DM-Sans text-gray-600 font-bold">
-                        Completed
-                      </p>
-                    </div>
-                    <div className="bg-[#f5f2eb] px-6 py-6 rounded-2xl mb-4">
-                      <div className="mb-3 text-[11px] font-DM-Sans">
-                        <div className="bg-blue-100 font-semibold w-9 px-2.5 py-2.5 rounded-xl">
-                          <BsFileEarmarkPostFill
-                            feBold
-                            className="text-[15px] text-blue-600 font-DM-Sans"
-                          />
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-gray-500 font-DM-Sans font-semibold mb-1">
-                        ARTICLE
-                      </p>
-                      <p className="text-[14px] font-DM-Sans font-semibold mb-1">
-                        MSME Udyam Registration - Complete Guide 2026
-                      </p>
-                      <div className="bg-[#c4622a] w-full py-[3px] rounded-2xl mb-1"></div>
-                      <p className="text-[12px] font-DM-Sans text-gray-600 font-bold">
-                        Completed
-                      </p>
-                    </div>
-                    <div className="bg-[#f5f2eb] px-6 py-6 rounded-2xl">
-                      <div className="mb-3 text-[11px] font-DM-Sans">
-                        <div className="bg-green-100 font-semibold w-9 px-2.5 py-2.5 rounded-xl">
-                          <LuClipboardList
-                            feBold
-                            className="text-[15px] text-green-600 font-DM-Sans"
-                          />
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-gray-500 font-DM-Sans font-semibold mb-1">
-                        CHECKLIST
-                      </p>
-                      <p className="text-[14px] font-DM-Sans font-semibold mb-1">
-                        Pre-Launch Compliance Checklist
-                      </p>
-                      <div className="bg-[#c4622a] w-full py-[3px] rounded-2xl mb-1"></div>
-                      <p className="text-[12px] font-DM-Sans text-gray-600 font-bold">
-                        33% done
-                      </p>
-                    </div>
-                  </div>
-                </div>
-    )
+function LearningResources({ dashboard }) {
+  const navigate = useNavigate();
+  const resources = dashboard?.roadmap?.steps?.flatMap((step) => step.resources || []) || [];
+  return <div className="mb-4 rounded-2xl bg-white px-6 py-6"><div className="mb-2 flex items-center gap-1 text-[11px] font-semibold text-[#c4622a]"><GoDash />CONTINUE LEARNING</div><div className="mb-4 flex items-center justify-between"><h3 className="font-Outfit text-lg font-extrabold">Your resources</h3><button type="button" onClick={() => navigate("/learner/resources")} className="text-xs font-semibold text-[#c4622a]">View all</button></div>{resources.length ? <div className="grid gap-3 md:grid-cols-3">{resources.slice(0, 3).map((resource) => <a key={resource._id} href={resource.url} target="_blank" rel="noreferrer" className="rounded-xl bg-[#f5f2eb] p-4"><p className="text-[10px] font-semibold text-gray-500">{resource.type}</p><p className="mt-2 text-sm font-semibold">{resource.title}</p></a>)}</div> : <p className="text-sm text-gray-500">No published resources are attached to this roadmap yet.</p>}</div>;
 }
 
 export default LearningResources;

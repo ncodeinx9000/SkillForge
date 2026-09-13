@@ -1,130 +1,73 @@
-import { GoDash } from "react-icons/go";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { FaCheckCircle, FaRegCircle } from "react-icons/fa";
 import Navbar from "../../components/Learner/LearnerDashboard/Navbar";
 import Sidebar from "../../components/Learner/LearnerDashboard/Sidebar";
+import api from "../../lib/axios";
 
-import { IoIosArrowDown } from "react-icons/io";
-import { FaRegCheckCircle } from "react-icons/fa";
-import { FaHandPointRight } from "react-icons/fa";
-import { LiaRupeeSignSolid } from "react-icons/lia";
-import { FaArrowUpRightFromSquare } from "react-icons/fa6";
-import { TbMinusVertical } from "react-icons/tb";
-import { CiFilter } from "react-icons/ci";
-import { CiSearch } from "react-icons/ci";
-import { MdArrowRightAlt } from "react-icons/md";
-import { FiPlay } from "react-icons/fi";
-import { BsFileEarmarkPostFill } from "react-icons/bs";
-import { LuClipboardList } from "react-icons/lu";
-
-import Step from "../../components/LearnerRoadmap/Step";
-import foodImg from "../../assets/food_catering.jpg";
-import BusinessIdeaCard from "../../components/Learner/BusinessIdea";
-import ProgressBar from "../../components/onboarding/ProgressBar";
-import LearnerResourceCard from "../../components/Learner/LearnerResourceCard";
-
-function BusinessIdea() {
+function Resources() {
   const [showSidebar, setShowSidebar] = useState(false);
+  const [progress, setProgress] = useState(null);
+  const [resources, setResources] = useState([]);
+  const [type, setType] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [updating, setUpdating] = useState(null);
 
-  const [showFullStep, setShowFullStep] = useState(false);
+  const loadResources = async () => {
+    try {
+      setLoading(true);
+      const progressResponse = await api.get("/progress/my-progress");
+      const activeRoadmap = progressResponse.data.activeRoadmap;
+      setProgress(progressResponse.data);
+      if (!activeRoadmap?.roadmap?._id) {
+        setResources([]);
+        return;
+      }
+      const resourceResponse = await api.get(`/learner/allResources/${activeRoadmap.roadmap._id}`);
+      setResources(resourceResponse.data.resources || []);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || "Unable to load learning resources.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadResources(); }, []);
+
+  const toggleCompletion = async (resourceId) => {
+    try {
+      setUpdating(resourceId);
+      await api.patch(`/progress/resource/${resourceId}`);
+      await loadResources();
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || "Unable to update resource progress.");
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const activeProgress = progress?.activeRoadmap;
+  const completedIds = new Set(activeProgress?.completedResourceIds || []);
+  const visibleResources = type === "All" ? resources : resources.filter((resource) => resource.type === type);
+  const percentage = activeProgress?.resourceProgress?.percentage || 0;
 
   return (
-    <div className="bg-[#f5f2eb]  min-h-screen overflow-hidden">
-      {/*sidebar*/}
+    <div className="min-h-screen bg-[#f5f2eb]">
       <Sidebar showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
-
       <Navbar showSidebar={showSidebar} />
-
-      <div
-        className={`${showSidebar ? "lg:pl-60  px-6 py-5 mt-23" : "lg:pl-50 lg:pr-30 px-6 py-5 mt-23"}`}
-      >
-        <div className="flex gap-2 items-center font-DM-Sans font-semibold text-[11px] text-[#c4622a] tracking-wide mb-2">
-          <GoDash />
-          <p>Learning Resources</p>
-        </div>
-
-        <h2 className="text-[23px] font-Outfit font-extrabold mb-6">
-          Training Library
-        </h2>
-
-        <div className="flex gap-4 bg-[#1e3a1e] px-6 py-5 rounded-2xl mb-4">
-          <div className="flex-1">
-            <p className="text-gray-400 text-[15px] font-DM-Sans mb-1">
-              Your learning progress
-            </p>
-            <ProgressBar />
-            <p className="text-gray-400 text-[13px] font-DM-Sans">
-              2 of 8 completed
-            </p>
-          </div>
-          <div>
-            <p className="text-[27px] text-white font-bold">25%</p>
-            <p className="text-gray-400">complete</p>
-          </div>
-        </div>
-
-        <ul className="flex items-center gap-2 text-[13px] mb-5">
-          <li className="bg-white text-gray-700 px-4 py-1.5 rounded-2xl">
-            All
-          </li>
-          <li className="bg-white  text-gray-700 px-4 py-1.5 rounded-2xl">
-            Video
-          </li>
-          <li className="bg-white  text-gray-700 px-4 py-1.5 rounded-2xl">
-            Article
-          </li>
-          <li className="bg-white  text-gray-700 px-4 py-1.5 rounded-2xl">
-            Checklist
-          </li>
-          <TbMinusVertical />
-          <li className="bg-white text-gray-700 px-4 py-1.5 rounded-2xl">
-            All
-          </li>
-          <li className="bg-white text-gray-700 px-4 py-1.5 rounded-2xl">
-            Ideation
-          </li>
-          <li className="bg-white text-gray-700 px-4 py-1.5 rounded-2xl">
-            Legal
-          </li>
-          <li className="bg-white  text-gray-700 px-4 py-1.5 rounded-2xl">
-            Finance
-          </li>
-          <li className="bg-white  text-gray-700 px-4 py-1.5 rounded-2xl">
-            Operations
-          </li>
-          <li className="bg-white text-gray-700 px-4 py-1.5 rounded-2xl">
-            Marketing
-          </li>
-        </ul>
-
-        <div className="lg:grid lg:grid-cols-3 gap-4">
-          <LearnerResourceCard 
-          Icon={FiPlay}
-          resource="VIDEO IDEATION"
-          description="How to Validate Your Business Idea in 7 Days"
-          duration="18 min"
-          status="Done"
-          />
-
-           <LearnerResourceCard 
-          Icon={FiPlay}
-          resource="VIDEO IDEATION"
-          description="How to Validate Your Business Idea in 7 Days"
-          duration="18 min"
-          status="Done"
-          />
-
-           <LearnerResourceCard 
-          Icon={FiPlay}
-          resource="VIDEO IDEATION"
-          description="How to Validate Your Business Idea in 7 Days"
-          duration="18 min"
-          status="Done"
-          />
-        </div>
-      </div>
+      <main className={`${showSidebar ? "lg:pl-60" : "lg:pl-50 lg:pr-30"} mt-23 px-6 py-5`}>
+        <p className="text-xs font-semibold tracking-wide text-[#c4622a]">LEARNING RESOURCES</p>
+        <h1 className="mb-6 mt-2 font-Outfit text-2xl font-extrabold">Training Library</h1>
+        {error && <div className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+        <section className="mb-5 rounded-2xl bg-[#1e3a1e] px-6 py-5 text-white">
+          <div className="flex items-center justify-between"><div><p className="text-sm text-gray-300">Your resource progress</p><p className="mt-1 text-xs text-gray-300">{activeProgress?.resourceProgress?.completed || 0} of {activeProgress?.resourceProgress?.total || 0} completed</p></div><strong className="text-3xl">{percentage}%</strong></div>
+          <div className="mt-4 h-2 rounded-full bg-white/20"><div className="h-2 rounded-full bg-[#d9a77e]" style={{ width: `${percentage}%` }} /></div>
+        </section>
+        <div className="mb-5 flex flex-wrap gap-2">{["All", "Article", "Video", "PDF", "Template", "Website", "Course"].map((resourceType) => <button key={resourceType} onClick={() => setType(resourceType)} className={`rounded-full px-4 py-2 text-xs ${type === resourceType ? "bg-[#1e3a1e] text-white" : "bg-white text-gray-600"}`}>{resourceType}</button>)}</div>
+        {loading ? <div className="rounded-2xl bg-white p-8 text-center text-sm text-gray-500">Loading resources...</div> : visibleResources.length === 0 ? <div className="rounded-2xl bg-white p-8 text-center text-sm text-gray-500">{activeProgress ? "No published resources are attached to this roadmap yet." : "Select a business idea to unlock its resources."}</div> : <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{visibleResources.map((resource) => { const completed = completedIds.has(resource._id); return <article key={resource._id} className="overflow-hidden rounded-2xl bg-white"><>{resource.thumbnail && <img src={resource.thumbnail} alt="" className="h-32 w-full object-cover" />}</><div className="p-5"><div className="mb-3 flex items-start justify-between gap-3"><span className="rounded-full bg-[#f5f2eb] px-2 py-1 text-[10px] font-semibold text-gray-600">{resource.type}</span><button title={completed ? "Mark incomplete" : "Mark complete"} disabled={updating === resource._id} onClick={() => toggleCompletion(resource._id)} className="text-[#1e3a1e] disabled:opacity-50">{completed ? <FaCheckCircle /> : <FaRegCircle />}</button></div><h2 className="font-Outfit font-bold">{resource.title}</h2><p className="mt-2 line-clamp-3 text-xs text-gray-500">{resource.description || "Open this resource to continue learning."}</p><div className="mt-4 flex items-center justify-between gap-2"><span className="text-[11px] text-gray-400">{resource.estimatedDuration || "Self-paced"}</span><a href={resource.url} target="_blank" rel="noreferrer" className="rounded-lg bg-[#1e3a1e] px-3 py-2 text-xs font-semibold text-white">Open</a></div></div></article>; })}</div>}
+      </main>
     </div>
   );
 }
 
-export default BusinessIdea;
+export default Resources;

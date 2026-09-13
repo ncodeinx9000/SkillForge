@@ -68,7 +68,7 @@ export const getLearnerQuestions = async (req, res) => {
                 path: "mentor",
                 populate: {
                     path: "user",
-                    select: "name email profileImage",
+                    select: "name email profilePicture",
                 },
             })
             .sort({ createdAt: -1 });

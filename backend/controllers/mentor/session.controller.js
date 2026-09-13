@@ -26,13 +26,18 @@ export const createSession = async (req, res) => {
       });
     }
 
-    const mentor = await Mentor.findById(mentorId);
+    const mentor = await Mentor.findOne({ _id: mentorId, verificationStatus: "verified" });
 
     if (!mentor) {
       return res.status(404).json({
         success: false,
         message: "Mentor not found",
       });
+    }
+
+    const sessionDate = new Date(date);
+    if (Number.isNaN(sessionDate.getTime()) || sessionDate <= new Date()) {
+      return res.status(400).json({ success: false, message: "Session date must be in the future" });
     }
 
     if (!mentor.availability) {
@@ -49,7 +54,7 @@ export const createSession = async (req, res) => {
       learner: learnerId,
       title,
       description,
-      date,
+      date: sessionDate,
       duration,
       status: "pending",
     });
@@ -95,7 +100,7 @@ export const getLearnerSessions = async (req, res) => {
         path: "mentor",
         populate: {
           path: "user",
-          select: "name email profileImage",
+          select: "name email profilePicture",
         },
       })
       .sort({ date: -1 });
@@ -246,6 +251,14 @@ export const confirmSession = async (req, res) => {
     // NOW the learner becomes an active mentee
     // ==================================================
 
+    const learnerProgress = await LearnerProgress.findOne({
+      learner: session.learner,
+      status: "Active",
+    });
+    const existingMentorBooking = learnerProgress?.bookedMentor?.some(
+      (bookedMentor) => bookedMentor.toString() === mentor._id.toString(),
+    );
+
     await LearnerProgress.findOneAndUpdate(
       {
         learner: session.learner,
@@ -258,16 +271,13 @@ export const confirmSession = async (req, res) => {
       }
     );
 
-    // Update mentor statistics
-    await Mentor.findByIdAndUpdate(
-      mentor._id,
-      {
-        $inc: {
-          totalSessions: 1,
-          totalMentees: 1,
-        },
-      }
-    );
+    // Count the learner once, even when they book multiple sessions.
+    await Mentor.findByIdAndUpdate(mentor._id, {
+      $inc: {
+        totalSessions: 1,
+        ...(existingMentorBooking ? {} : { totalMentees: 1 }),
+      },
+    });
 
     // Notify learner
     await Notification.create({
@@ -414,6 +424,8 @@ export const completeSession = async (req, res) => {
     session.status = "completed";
 
     await session.save();
+
+    await Notification.create({ recipient: session.learner, type: "session", title: "Session completed", message: "Your mentor marked the session as completed. You can now leave a review.", relatedId: session._id, relatedModel: "Session" });
 
     return res.status(200).json({
       success: true,

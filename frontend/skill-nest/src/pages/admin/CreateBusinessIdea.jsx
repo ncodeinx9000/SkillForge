@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { uploadAsset } from "../../lib/upload";
 
 const CreateBusinessIdea = () => {
     const navigate = useNavigate();
@@ -7,6 +8,7 @@ const CreateBusinessIdea = () => {
     const API_URL = import.meta.env.VITE_API_URL;
 
     const [loading, setLoading] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
     const [mentors, setMentors] = useState([]);
 
     const [formData, setFormData] = useState({
@@ -67,6 +69,21 @@ const CreateBusinessIdea = () => {
             ...prev,
             [name]: value,
         }));
+    };
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            setUploadingImage(true);
+            const asset = await uploadAsset(file, "business-ideas");
+            setFormData((prev) => ({ ...prev, image: asset.url }));
+        } catch (error) {
+            alert(error.response?.data?.message || "Image upload failed.");
+        } finally {
+            setUploadingImage(false);
+            e.target.value = "";
+        }
     };
 
     // Create business idea
@@ -481,14 +498,14 @@ const CreateBusinessIdea = () => {
                         Cover Image
                     </h2>
 
-                    <input
-                        type="text"
-                        name="image"
-                        value={formData.image}
-                        onChange={handleChange}
-                        placeholder="https://example.com/image.jpg"
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5"
-                    />
+                    <div className="space-y-3">
+                        <input type="text" name="image" value={formData.image} onChange={handleChange} placeholder="Image URL" className="w-full border border-gray-300 rounded-lg px-4 py-2.5" />
+                        <label className="inline-flex cursor-pointer items-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-700">
+                            {uploadingImage ? "Uploading..." : "Upload image"}
+                            <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} className="hidden" />
+                        </label>
+                        {formData.image && <img src={formData.image} alt="Business idea preview" className="h-32 w-48 rounded-lg object-cover" />}
+                    </div>
 
                 </section>
 
@@ -507,7 +524,7 @@ const CreateBusinessIdea = () => {
 
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading || uploadingImage}
                         className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
                     >
                         {loading

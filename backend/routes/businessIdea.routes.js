@@ -15,7 +15,7 @@ businessIdeaRouter.get(
   getRecommendedIdea,
 );
 businessIdeaRouter.get(
-  "/getBusinessIdeaById/:businessIdeaId",
+  "/getBusinessIdeaById/:ideaId",
   isAuthenticated,
   getBusinessIdeaById,
 );

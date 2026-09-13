@@ -1,7 +1,7 @@
-function MentorQA(){
-    return(
-       <></>
-    )
-}
+import { useEffect, useState } from "react";
+import api from "../../lib/axios";
+
+function MentorQA() { const [questions, setQuestions] = useState([]); const [answers, setAnswers] = useState({}); const [loading, setLoading] = useState(true); const [savingId, setSavingId] = useState(""); const [error, setError] = useState(""); const load = async () => { try { setLoading(true); const { data } = await api.get("/questions/mentor/all"); setQuestions(data.questions || []); } catch (err) { setError(err.response?.data?.message || "Could not load learner questions."); } finally { setLoading(false); } }; useEffect(() => { load(); }, []); const submit = async (id) => { const answer = answers[id]?.trim(); if (!answer) return; try { setSavingId(id); await api.patch(`/questions/${id}/answer`, { answer }); await load(); } catch (err) { setError(err.response?.data?.message || "Could not send answer."); } finally { setSavingId(""); } }; if (loading) return <div className="mt-4 rounded-2xl bg-white p-8 text-center text-sm text-gray-500">Loading questions…</div>; return <section className="mt-4 rounded-2xl bg-white p-6"><h2 className="text-lg font-bold text-[#1e3a1e]">Learner Q&A</h2><p className="mt-1 text-sm text-gray-500">Answer questions assigned directly to you.</p>{error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}{questions.length === 0 ? <p className="py-10 text-center text-sm text-gray-500">No learner questions are waiting for you.</p> : <div className="mt-5 space-y-4">{questions.map((item) => <article key={item._id} className="rounded-xl border border-gray-100 p-4"><p className="font-semibold">{item.learner?.name || "Learner"}</p><p className="mt-2 text-sm text-gray-700">{item.question}</p>{item.status === "answered" ? <div className="mt-3 rounded-lg bg-green-50 p-3 text-sm text-green-800"><strong>Your answer:</strong> {item.answer}</div> : <><textarea value={answers[item._id] || ""} onChange={(event) => setAnswers({ ...answers, [item._id]: event.target.value })} placeholder="Write a clear, helpful answer…" rows="3" className="mt-3 w-full rounded-xl border border-gray-200 p-3 text-sm" /><button disabled={savingId === item._id} onClick={() => submit(item._id)} className="mt-2 rounded-xl bg-[#c4662a] px-4 py-2 text-sm font-semibold text-white">{savingId === item._id ? "Sending…" : "Send answer"}</button></>}</article>)}</div>}</section>; }
 
 export default MentorQA;
+

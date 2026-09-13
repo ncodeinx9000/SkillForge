@@ -10,6 +10,7 @@ import {
 } from "../controllers/mentor/session.controller.js";
 
 import { isAuthenticated } from "../middleware/auth.js";
+import { isLearner, isMentor } from "../middleware/role.js";
 
 const sessionRouter = express.Router();
 
@@ -18,6 +19,7 @@ const sessionRouter = express.Router();
 sessionRouter.post(
     "/create",
     isAuthenticated,
+    isLearner,
     createSession
 );
 
@@ -26,6 +28,7 @@ sessionRouter.post(
 sessionRouter.get(
     "/learner/all",
     isAuthenticated,
+    isLearner,
     getLearnerSessions
 );
 
@@ -34,6 +37,7 @@ sessionRouter.get(
 sessionRouter.get(
     "/mentor",
     isAuthenticated,
+    isMentor,
     getMentorSessions
 );
 
@@ -42,6 +46,7 @@ sessionRouter.get(
 sessionRouter.patch(
     "/:sessionId/confirm",
     isAuthenticated,
+    isMentor,
     confirmSession
 );
 
@@ -50,6 +55,7 @@ sessionRouter.patch(
 sessionRouter.patch(
     "/:sessionId/reject",
     isAuthenticated,
+    isMentor,
     rejectSession
 );
 
@@ -58,6 +64,7 @@ sessionRouter.patch(
 sessionRouter.patch(
     "/:sessionId/complete",
     isAuthenticated,
+    isMentor,
     completeSession
 );
 

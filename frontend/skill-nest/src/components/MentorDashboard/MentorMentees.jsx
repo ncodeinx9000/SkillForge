@@ -154,10 +154,10 @@ function MentorMentees() {
                             >
 
                                 {/* Avatar */}
-                                {learner?.profileImage ? (
+                                {learner?.profilePicture ? (
                                     <img
                                         src={
-                                            learner.profileImage
+                                            learner.profilePicture
                                         }
                                         alt={learnerName}
                                         className="w-10 h-10 object-cover rounded-xl"

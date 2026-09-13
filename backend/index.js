@@ -15,6 +15,8 @@ import sessionRouter from "./routes/session.routes.js";
 import questionRouter from "./routes/question.routes.js";
 import reviewRouter from "./routes/review.routes.js";
 import notificationRouter from "./routes/notification.routes.js";
+import uploadRouter from "./routes/upload.routes.js";
+
 
 import adminDashboardRouter from "./routes/admin/adminDashboard.routes.js";
 import adminMentorRouter from "./routes/admin/adminMentor.routes.js";
@@ -24,6 +26,7 @@ import adminResourceRouter from "./routes/admin/adminResource.routes.js";
 import adminUserRouter from "./routes/admin/adminUser.routes.js";
 import adminReportRouter from "./routes/admin/adminReport.routes.js";
 import adminProfileRouter from "./routes/admin/adminProfile.routes.js";
+import reportRouter from "./routes/report.routes.js";
 
 dotenv.config();
 
@@ -34,7 +37,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
   }),
 );
@@ -56,6 +59,8 @@ app.use("/api/reviews", reviewRouter);
 
 // Notifications
 app.use("/api/notifications", notificationRouter);
+app.use("/api/reports", reportRouter);
+app.use("/api/uploads", uploadRouter);
 
 // Admin
 app.use("/api/admin/dashboard", adminDashboardRouter);

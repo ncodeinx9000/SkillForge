@@ -1,89 +1,50 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Navbar from "../../components/Learner/LearnerDashboard/Navbar";
 import Sidebar from "../../components/Learner/LearnerDashboard/Sidebar";
-import { GoDash } from "react-icons/go";
-import { MdOutlinePersonOutline } from "react-icons/md";
-import { AiOutlineThunderbolt } from "react-icons/ai";
-import { IoMdNotificationsOutline } from "react-icons/io";
-import { LuShield } from "react-icons/lu";
-import { CiSettings } from "react-icons/ci";
-import { MdOutlineFileUpload } from "react-icons/md";
+import { updateUser } from "../../redux/userSlice";
+import api from "../../lib/axios";
+import { uploadAsset } from "../../lib/upload";
 
 function Settings() {
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.user.user);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [form, setForm] = useState({ name: user?.name || "", phoneNumber: user?.phoneNumber || "", bio: user?.bio || "", profilePicture: user?.profilePicture || "" });
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  return (
-    <div className="bg-[#f5f2eb]  min-h-screen overflow-hidden">
-      <Sidebar setShowSidebar={setShowSidebar} showSidebar={showSidebar} />
+  const change = (event) => setForm({ ...form, [event.target.name]: event.target.value });
+  const uploadPhoto = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const asset = await uploadAsset(file, "profile-images");
+      setForm((current) => ({ ...current, profilePicture: asset.url }));
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Photo upload failed.");
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
+  };
+  const submit = async (event) => {
+    event.preventDefault();
+    try {
+      setSaving(true);
+      const { data } = await api.put("/auth/profile", form);
+      dispatch(updateUser(data.user));
+      setMessage(data.message);
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Unable to save profile.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
-      <Navbar showSidebar={showSidebar} />
-
-      <div
-        className={`${showSidebar ? "lg:pl-75  px-6 py-5 mt-23" : "lg:pl-50 lg:pr-30 px-6 py-5 mt-23"}`}
-      >
-        <div className="flex items-center gap-1 text-[11px] font-DM-Sans text-[#c4622a] font-semibold mb-2">
-          <GoDash />
-          <p className="">SETTINGS</p>
-        </div>
-
-        <h3 className="text-[20px] font-Outfit font-extrabold mb-10">Account Settings</h3>
-
-        <div className="flex items-start gap-10">
-            <div className="text-[14px] bg-white px-5 py-4 rounded-2xl">
-                <div className="flex items-center gap-2 mb-3">
-                    <MdOutlinePersonOutline />
-                    <p>Profile</p>
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                    <AiOutlineThunderbolt />
-                    <p>Skills & Interests</p>
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                    <IoMdNotificationsOutline />
-                    <p>Notifications</p>
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                    <LuShield />
-                    <p>Security</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <CiSettings />
-                    <p>Account</p>
-                </div>
-            </div>
-            <div className="w-[60%] bg-white  px-6 py-7 rounded-2xl">
-                <h2 className="text-[17px] font-Outfit font-extrabold mb-5">Public Profile</h2>
-
-                <div className="flex items-center gap-5 mb-5">
-                    <div className="bg-[#1e3a1e] text-white font-Outfit text-[25px] font-semibold px-6.5 py-4 rounded-2xl">
-                        <p>K</p>
-                    </div>
-                    <div>
-                        <p className="text-[14px] font-DM-Sans font-semibold">Kavitha Menon</p>
-                        <p className="text-[13px] text-gray-600 mb-1.5">user@example.com</p>
-
-                        <div className="flex items-center gap-1 text-[13px] font-DM-Sans text-[#c4622a] font-semibold">
-                            <MdOutlineFileUpload />
-                            <p>Upload photo</p>
-                        </div>
-                    </div>
-                </div>
-
-                <p className="text-[12px] font-DM-Sans font-semibold text-gray-600 mb-1">FULL NAME</p>
-                <input type="text" placeholder="Kavitha Menon" className="bg-[#f5f2eb] px-2 py-2 rounded-2xl border border-[#c4622a] mb-4"/>
-
-                 <p className="text-[12px] font-DM-Sans font-semibold text-gray-600">EMAIL</p>
-                <input type="text" placeholder="Kavitha Menon" className="bg-[#f5f2eb] px-2 py-2 rounded-2xl border border-[#c4622a]"/>
-
-                 <p className="text-[12px] font-DM-Sans font-semibold text-gray-600 mb-1">CITY/LOCATION</p>
-                <input type="text" placeholder="Thrissur, Kerala" className="bg-[#f5f2eb] px-2 py-2 rounded-2xl border border-[#c4622a] mb-6"/>
-
-                <div className="bg-[#c4622a] text-white text-[15px] font-Outfit px-3 py-2 rounded-2xl">Save Changes</div>
-            </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <div className="min-h-screen bg-[#f5f2eb]"><Sidebar showSidebar={showSidebar} setShowSidebar={setShowSidebar} /><Navbar showSidebar={showSidebar} /><main className={`${showSidebar ? "lg:pl-60" : "lg:pl-50 lg:pr-30"} mt-23 px-6 py-5`}><p className="text-xs font-semibold tracking-wide text-[#c4622a]">MY PROFILE</p><h1 className="mb-2 mt-2 font-Outfit text-2xl font-extrabold">Learner Profile</h1><p className="mb-6 text-sm text-gray-500">Manage your profile information and profile photo.</p><form onSubmit={submit} className="max-w-2xl rounded-2xl bg-white p-6"><div className="mb-5 flex items-center gap-4">{form.profilePicture ? <img src={form.profilePicture} alt="Profile" className="h-16 w-16 rounded-2xl object-cover" /> : <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#1e3a1e] text-2xl font-bold text-white">{form.name.charAt(0).toUpperCase() || "U"}</div>}<label className="cursor-pointer text-sm font-semibold text-[#c4622a]">{uploading ? "Uploading..." : "Upload photo"}<input type="file" accept="image/*" onChange={uploadPhoto} className="hidden" /></label></div><div className="space-y-4"><input required name="name" value={form.name} onChange={change} placeholder="Full name" className="w-full rounded-xl border p-3 text-sm" /><input readOnly value={user?.email || ""} className="w-full rounded-xl border bg-gray-50 p-3 text-sm text-gray-500" /><input name="phoneNumber" value={form.phoneNumber} onChange={change} placeholder="Phone number" className="w-full rounded-xl border p-3 text-sm" /><textarea name="bio" value={form.bio} onChange={change} placeholder="Tell us about yourself" rows="4" className="w-full rounded-xl border p-3 text-sm" /></div>{message && <p className="mt-3 text-sm text-[#1e3a1e]">{message}</p>}<button disabled={saving || uploading} className="mt-5 rounded-xl bg-[#c4622a] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{saving ? "Saving..." : "Save Changes"}</button></form></main></div>;
 }
 
 export default Settings;

@@ -1,5 +1,6 @@
 import { CiSearch } from "react-icons/ci";
 import { IoMdNotificationsOutline } from "react-icons/io";
+import NotificationBell from "../Notifications/NotificationBell";
 
 
 function Navbar({showSidebar}){
@@ -13,7 +14,7 @@ function Navbar({showSidebar}){
                     <CiSearch />
                     <input type="text" placeholder="Search..."  />
                   </div>
-                  <IoMdNotificationsOutline className="ml-3 mr-4 text-[18px] " />
+                  <NotificationBell />
                 </div>
               </div>
     )

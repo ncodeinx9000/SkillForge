@@ -55,8 +55,8 @@ function LearnerMentorCard({ mentor }) {
   const isAvailable = mentor.availability === true;
 
   const mentorImage =
-    mentor.user?.profileImage ||
-    mentor.profileImage ||
+    mentor.user?.profilePicture ||
+    mentor.profilePicture ||
     "";
 
   const handleChange = (e) => {

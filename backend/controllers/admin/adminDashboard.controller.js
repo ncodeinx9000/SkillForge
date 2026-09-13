@@ -13,8 +13,11 @@ export const getAdminDashboard = async (req, res) => {
 
         const [
             totalUsers,
+            totalLearners,
+            totalMentors,
             activeMentors,
             pendingMentors,
+            verifiedMentors,
             publishedBusinessIdeas,
             publishedRoadmaps,
             pendingResources,
@@ -24,6 +27,9 @@ export const getAdminDashboard = async (req, res) => {
 
             // Total users
             User.countDocuments(),
+
+            User.countDocuments({ role: "learner" }),
+            User.countDocuments({ role: "mentor" }),
 
             // Verified and available mentors
             Mentor.countDocuments({
@@ -36,19 +42,21 @@ export const getAdminDashboard = async (req, res) => {
                 verificationStatus: "pending",
             }),
 
+            Mentor.countDocuments({ verificationStatus: "verified" }),
+
             // Published business ideas
             BusinessIdea.countDocuments({
                 status: "published",
             }),
 
             // Published roadmaps
-            RoadMap.countDocuments({
+            Roadmap.countDocuments({
                 status: "published",
             }),
 
             // Resources waiting for admin approval
             Resource.countDocuments({
-                status: "pending",
+                status: { $in: ["draft", "pending"] },
             }),
 
             // Open reports
@@ -66,6 +74,9 @@ export const getAdminDashboard = async (req, res) => {
 
             data: {
                 totalUsers,
+                totalLearners,
+                totalMentors,
+                verifiedMentors,
                 activeMentors,
                 pendingMentors,
                 publishedBusinessIdeas,

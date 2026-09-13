@@ -2,9 +2,30 @@ import { User } from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  secure: process.env.NODE_ENV === "production",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
+
+    if (!name?.trim() || !email?.trim() || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email and password are required",
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 8 characters long",
+      });
+    }
 
     const exist = await User.findOne({ email });
 
@@ -20,7 +41,9 @@ export const register = async (req, res) => {
       name,
       email,
       password: hashPassword,
-      role,
+      // Public registration always creates a learner. Mentor and admin roles
+      // must be assigned through a controlled administrative workflow.
+      role: "learner",
     });
 
     // Generate JWT
@@ -29,10 +52,7 @@ export const register = async (req, res) => {
     });
 
     // Save Cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "strict",
-    });
+    res.cookie("token", token, cookieOptions);
 
     // Remove Password
     const userData = await User.findById(user._id).select("-password");
@@ -79,10 +99,7 @@ export const login = async (req, res) => {
     });
 
     // 4. Write the JWT token to the cookies
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "strict",
-    });
+    res.cookie("token", token, cookieOptions);
 
     // fetch user without password
     const userData = await User.findById(user._id).select("-password");
@@ -123,12 +140,28 @@ export const getMe = async (req, res) => {
   }
 };
 
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, phoneNumber, bio, profilePicture } = req.body;
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (!name?.trim()) return res.status(400).json({ success: false, message: "Name is required" });
+    user.name = name.trim();
+    if (phoneNumber !== undefined) user.phoneNumber = String(phoneNumber).trim();
+    if (bio !== undefined) user.bio = String(bio).trim();
+    if (profilePicture !== undefined) user.profilePicture = String(profilePicture).trim();
+    await user.save();
+    const userData = await User.findById(user._id).select("-password");
+    return res.json({ success: true, message: "Profile updated successfully", user: userData });
+  } catch (error) {
+    console.error("Update profile error:", error);
+    return res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 export const logout = async (req, res) => {
   try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      sameSite: "strict",
-    });
+    res.clearCookie("token", cookieOptions);
 
     return res.status(200).json({
       success: true,

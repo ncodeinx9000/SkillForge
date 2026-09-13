@@ -1,155 +1,26 @@
-import { FiHome } from "react-icons/fi";
-import { LuLightbulb } from "react-icons/lu";
-import { FaBullseye } from "react-icons/fa6";
-import { FiBookOpen } from "react-icons/fi";
-import { FaArrowTrendUp } from "react-icons/fa6";
-import { useState } from "react";
 import { PiPlantThin } from "react-icons/pi";
-import { MdKeyboardArrowRight } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
-import { IoMdNotificationsOutline } from "react-icons/io";
-import { CiSettings } from "react-icons/ci";
-import { MdOutlineLogout } from "react-icons/md";
+import { MdOutlineLogout, MdOutlineFileUpload } from "react-icons/md";
 import { HiOutlineSquares2X2 } from "react-icons/hi2";
 import { RxPeople } from "react-icons/rx";
-import { GoDeviceCameraVideo } from "react-icons/go";
-import { MdOutlineFileUpload } from "react-icons/md";
-import { GoComment } from "react-icons/go";
+import { GoDeviceCameraVideo, GoComment } from "react-icons/go";
 import { VscGraphLine } from "react-icons/vsc";
+import { FiUser } from "react-icons/fi";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { logout } from "../../redux/userSlice";
+import { logoutUser } from "../../lib/logout";
 
-function Sidebar({ showSidebar, setShowSidebar }) {
+const items = [[HiOutlineSquares2X2, "Dashboard", "/mentor/dashboard"], [RxPeople, "My Mentees", "/mentor/my-mentees"], [GoDeviceCameraVideo, "Sessions", "/mentor/sessions"], [MdOutlineFileUpload, "Resources", "/mentor/resources"], [GoComment, "Q&A", "/mentor/q&a"], [VscGraphLine, "Analytics", "/mentor/analytics"], [FiUser, "My Profile", "/mentor/profile"]];
+
+function Sidebar() {
   const navigate = useNavigate();
-
-  const navItems = [
-    { icon: HiOutlineSquares2X2, label: "Dashboard" },
-    { icon: RxPeople, label: "My Mentees" },
-    { icon: GoDeviceCameraVideo , label: "Sessions" },
-    { icon: MdOutlineFileUpload, label: "Resources" },
-    { icon: GoComment, label: "Q&A" },
-    { icon: VscGraphLine, label: "Analytics" },
-
-  ];
-
-  const userSetting = [
-    {icon: CiSettings, label:"Settings"},
-    {icon: MdOutlineLogout, label: "Log Out"}
-  ]
-
-  const [activeIndex, setActiveIndex] = useState(false);
-  return (
-    <>
-      {showSidebar ? (
-        <div className="hidden md:flex flex-col  bg-[#1e3a1e] w-55 fixed top-0 left-0 h-screen z-10">
-          <div className="flex items-center justify-between gap-1 py-4.5  border-b border-gray-500 px-4">
-            <div className="flex items-center gap-1.5">
-              <div className="bg-[#c4662a] text-white px-2 py-2 rounded-xl">
-                <PiPlantThin className="text-[13px]" />
-              </div>
-              <p className="text-white text-[15px] font-DM-Sans font-extrabold">
-                SkilF<span className="text-[#c4622a]">orge</span>
-              </p>
-            </div>
-
-            <MdKeyboardArrowRight
-              className="text-white"
-              onClick={() => {
-                setShowSidebar(!showSidebar);
-              }}
-            />
-          </div>
-
-          {navItems.map(({ icon: Icon, label }, index) => (
-            <div
-              key={label}
-              onClick={() => {
-                setActiveIndex(index);
-                navigate(
-                  `/mentor/${label.toLowerCase().replace(/\s+/g, "-")}`,
-                );
-              }}
-              className={`flex items-center text-[14px] text-white font-DM-Sans font-semibold gap-2 px-2.5 py-2 ml-2 mr-2 mt-2 mb-0.5 rounded-2xl cursor-pointer transition-colors bg-[#c4662a]
-                 
-              }`}
-            >
-              <Icon />
-              <p>{label}</p>
-            </div>
-          ))}
-
-          <div className="mt-auto">
-            {userSetting.map(({icon: Icon, label}, index) => (
-              <div 
-              key={label}
-              onClick={() => {
-                setActiveIndex(index);
-                navigate(
-                  `/mentor/${label.toLowerCase().replace(/\s+/g, "-")}`,
-                );
-              }}
-              className={`flex items-center text-[14px] text-white font-DM-Sans font-semibold gap-2 px-2.5 py-2 ml-2 mr-2 mt-2 mb-0.5 rounded-2xl cursor-pointer transition-colors ${
-                activeIndex === index
-                  ? "bg-[#c4662a]"
-                  : "bg-transparent hover:bg-[#2d4d2d]"
-              }`}>
-                <Icon />
-                <p>{label}</p>
-              </div>
-          ))}
-          </div>
-          
-        </div>
-      ) : (
-        <div className="hidden md:flex flex-col  bg-[#1e3a1e] fixed top-0 left-0 h-screen z-10">
-          <div className="flex items-center gap-1 py-4.5  border-b border-gray-500 px-4">
-            <div className="bg-[#c4662a] text-white px-2 py-2 rounded-xl">
-              <PiPlantThin className="text-[13px]" />
-            </div>
-            <MdKeyboardArrowRight
-              className="text-white"
-              onClick={() => setShowSidebar(!showSidebar)}
-            />
-          </div>
-          {navItems.map(({ icon: Icon, label }, index) => (
-            <div
-              key={index}
-              onClick={() => {
-                setActiveIndex(index);
-                navigate(
-                  `/mentor/${label.toLowerCase().replace(/\s+/g, "-")}`,
-                );
-              }}
-              className="text-[14px] text-white font-DM-Sans font-semibold px-2 w-12 py-2 ml-2 mr-2 mt-2 mb-0.5 rounded-2xl cursor-pointer transition-colors bg-[#c4662a]"
-                  
-            >
-              <Icon />
-            </div>
-          ))}
-
-           <div className="mt-auto">
-            {userSetting.map(({icon: Icon, label}, index) => (
-              <div 
-              key={index}
-              onClick={() => {
-                setActiveIndex(index);
-                navigate(
-                  `/mentor/${label.toLowerCase().replace(/\s+/g, "-")}`,
-                );
-              }}
-               className={`text-[14px] text-white font-DM-Sans font-semibold px-2 w-12 py-2 ml-2 mr-2 mt-2 mb-0.5 rounded-2xl cursor-pointer transition-colors ${
-                activeIndex === index
-                  ? "bg-[#c4662a]"
-                  : "bg-transparent hover:bg-[#2d4d2d]"
-              }`}>
-                <Icon />
-              </div>
-          ))}
-          </div>
-        </div>
-      )}
-
-
-    </>
-  );
+  const location = useLocation();
+  const dispatch = useDispatch();
+  return <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-[#1e3a1e] text-white lg:flex">
+    <div className="flex items-center gap-2 border-b border-white/20 px-5 py-5"><span className="rounded-xl bg-[#c4662a] p-2"><PiPlantThin /></span><span className="font-bold">Skill<span className="text-[#e08a50]">Forge</span></span></div>
+    <nav className="flex-1 px-3 py-4">{items.map(([Icon, label, path]) => <button key={path} onClick={() => navigate(path)} className={`mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold ${location.pathname === path || (path === "/mentor/dashboard" && location.pathname === "/mentor") ? "bg-[#c4662a]" : "hover:bg-[#2d4d2d]"}`}><Icon />{label}</button>)}</nav>
+    <button onClick={async () => { await logoutUser(dispatch, logout); navigate("/login", { replace: true }); }} className="m-3 flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold hover:bg-[#2d4d2d]"><MdOutlineLogout />Log out</button>
+  </aside>;
 }
 
 export default Sidebar;

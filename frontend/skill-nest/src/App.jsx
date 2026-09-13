@@ -45,6 +45,7 @@ import AdminLearners from "./pages/admin/AdminLearners";
 import AdminLearnerDetails from "./pages/admin/AdminLearnerDetails";
 import AdminBusinessIdeaDetails from "./pages/admin/AdminBusinessIdeaDetails";
 import AdminEditBusinessIdea from "./pages/admin/AdminEditBusinessIdea";
+import MentorProfile from "./pages/Mentor/MentorProfile";
 
 function App() {
   return (
@@ -96,6 +97,8 @@ function App() {
         <Route path="/learner/my-progress" element={<MyProgress />} />
 
         <Route path="/learner/settings" element={<Settings />} />
+
+        <Route path="/learner/profile" element={<Settings />} />
       </Route>
 
       {/* ==================== MENTOR ==================== */}
@@ -116,6 +119,8 @@ function App() {
         <Route path="/mentor/analytics" element={<MentorDashboard />} />
 
         <Route path="/mentor/settings" element={<MentorDashboard />} />
+
+        <Route path="/mentor/profile" element={<MentorProfile />} />
       </Route>
 
       {/* ==================== ADMIN ==================== */}

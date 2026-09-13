@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { uploadAsset } from "../../lib/upload";
 
 const AdminProfile = () => {
     const API_URL = import.meta.env.VITE_API_URL;
@@ -14,6 +15,7 @@ const AdminProfile = () => {
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
 
     // ==========================================
     // GET ADMIN PROFILE
@@ -78,6 +80,21 @@ const AdminProfile = () => {
             ...prev,
             [name]: value,
         }));
+    };
+
+    const handlePhotoUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            setUploading(true);
+            const asset = await uploadAsset(file, "profile-images");
+            setFormData((prev) => ({ ...prev, profilePicture: asset.url }));
+        } catch (error) {
+            alert(error.response?.data?.message || "Profile image upload failed.");
+        } finally {
+            setUploading(false);
+            e.target.value = "";
+        }
     };
 
     // ==========================================
@@ -201,6 +218,10 @@ const AdminProfile = () => {
                         <p className="text-sm text-gray-500">
                             Administrator
                         </p>
+                        <label className="mt-2 inline-block cursor-pointer text-sm font-medium text-[#c4662a]">
+                            {uploading ? "Uploading..." : "Upload photo"}
+                            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handlePhotoUpload} disabled={uploading} className="hidden" />
+                        </label>
                     </div>
 
                 </div>

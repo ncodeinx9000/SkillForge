@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaPlus, FaExternalLinkAlt, FaEdit, FaTrash } from "react-icons/fa";
+import { uploadAsset } from "../../lib/upload";
 
 const AdminResources = () => {
     const API_URL = import.meta.env.VITE_API_URL;
@@ -13,6 +14,7 @@ const AdminResources = () => {
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [editingResource, setEditingResource] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [uploadingField, setUploadingField] = useState("");
 
     const emptyForm = {
         title: "",
@@ -78,6 +80,25 @@ const AdminResources = () => {
             ...prev,
             [name]: value,
         }));
+    };
+
+    const handleUpload = async (event, field) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setUploadingField(field);
+            const asset = await uploadAsset(
+                file,
+                field === "url" ? "resources" : "media"
+            );
+            setFormData((prev) => ({ ...prev, [field]: asset.url }));
+        } catch (error) {
+            alert(error.response?.data?.message || "Upload failed.");
+        } finally {
+            setUploadingField("");
+            event.target.value = "";
+        }
     };
 
     // =====================================================
@@ -946,6 +967,11 @@ const AdminResources = () => {
                                     className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
                                     required
                                 />
+
+                                <label className="mt-2 inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-indigo-600">
+                                    <input type="file" className="hidden" accept="application/pdf,video/mp4,video/webm,video/quicktime,image/*,text/plain,text/markdown" onChange={(event) => handleUpload(event, "url")} />
+                                    {uploadingField === "url" ? "Uploading resource…" : "Upload PDF, video, image or article file"}
+                                </label>
                             </div>
 
                             {/* THUMBNAIL */}
@@ -965,6 +991,11 @@ const AdminResources = () => {
                                     placeholder="https://example.com/image.jpg"
                                     className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
                                 />
+
+                                <label className="mt-2 inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-indigo-600">
+                                    <input type="file" className="hidden" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => handleUpload(event, "thumbnail")} />
+                                    {uploadingField === "thumbnail" ? "Uploading thumbnail…" : "Upload thumbnail image"}
+                                </label>
                             </div>
 
                             {/* DURATION + CATEGORY */}

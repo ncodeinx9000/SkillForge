@@ -1,7 +1,6 @@
-function MentorAnalytics(){
-    return(
-       <></>
-    )
-}
+import { useEffect, useState } from "react";
+import api from "../../lib/axios";
+
+function MentorAnalytics() { const [data, setData] = useState(null); const [error, setError] = useState(""); useEffect(() => { api.get("/mentor/analytics").then((response) => setData(response.data.analytics)).catch((err) => setError(err.response?.data?.message || "Could not load analytics.")); }, []); if (error) return <div className="mt-4 rounded-2xl bg-white p-8 text-center text-sm text-red-600">{error}</div>; if (!data) return <div className="mt-4 rounded-2xl bg-white p-8 text-center text-sm text-gray-500">Loading analytics...</div>; const cards = [["Total mentees", data.totalMentees], ["Active mentees", data.activeMentees], ["Total sessions", data.totalSessions], ["Pending sessions", data.pendingSessions], ["Confirmed sessions", data.confirmedSessions], ["Completed sessions", data.completedSessions], ["Rejected sessions", data.rejectedSessions], ["Average rating", data.averageRating], ["Total reviews", data.totalReviews], ["Average learner progress", `${data.averageProgress}%`], ["Published resources", data.resources], ["Unanswered questions", data.unansweredQuestions]]; return <section className="mt-4 rounded-2xl bg-white p-6"><h2 className="text-lg font-bold text-[#1e3a1e]">Mentoring analytics</h2><p className="mt-1 text-sm text-gray-500">Live database totals for your mentoring account.</p><div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{cards.map(([label, value]) => <div key={label} className="rounded-xl bg-[#f5f2eb] p-4"><p className="text-2xl font-bold text-[#1e3a1e]">{value || 0}</p><p className="mt-1 text-sm text-gray-600">{label}</p></div>)}</div></section>; }
 
 export default MentorAnalytics;

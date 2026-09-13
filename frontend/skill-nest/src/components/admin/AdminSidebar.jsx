@@ -1,28 +1,18 @@
 import React from "react";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { NavLink } from "react-router-dom";
 import { logout } from "../../redux/userSlice";
 import { FaUsers } from "react-icons/fa";
+import { logoutUser } from "../../lib/logout";
 
 const AdminSidebar = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        dispatch(logout());
-        navigate("/login");
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    await logoutUser(dispatch, logout);
+    navigate("/login", { replace: true });
   };
 
   const menuItems = [
@@ -83,13 +73,13 @@ const AdminSidebar = () => {
   ];
 
   return (
-    <aside className="w-64 min-h-screen bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-64 min-h-screen bg-[#1e3a1e] text-white flex flex-col">
       {/* Logo */}
-      <div className="h-20 flex items-center px-6 border-b border-gray-200">
+      <div className="h-20 flex items-center px-6 border-b border-white/20">
         <div>
-          <h1 className="text-2xl font-bold text-indigo-600">SkillForge</h1>
+          <h1 className="text-2xl font-bold text-white">Skill<span className="text-[#e08a50]">Forge</span></h1>
 
-          <p className="text-xs text-gray-500 mt-1">Admin Panel</p>
+          <p className="text-xs text-gray-300 mt-1">Admin Panel</p>
         </div>
       </div>
 
@@ -102,10 +92,10 @@ const AdminSidebar = () => {
               to={item.path}
               end={item.path === "/admin"}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition ${
+                  `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition ${
                   isActive
-                    ? "bg-indigo-50 text-indigo-600"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-[#c4662a] text-white"
+                    : "text-gray-200 hover:bg-[#2d4d2d] hover:text-white"
                 }`
               }
             >
@@ -118,10 +108,11 @@ const AdminSidebar = () => {
       </nav>
 
       {/* Logout */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-white/20">
         <button
           type="button"
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 transition"
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[#f2b08a] hover:bg-[#2d4d2d] transition"
         >
           <span className="text-lg">🚪</span>
 

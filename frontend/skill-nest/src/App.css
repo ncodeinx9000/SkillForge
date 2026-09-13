@@ -1,0 +1,11 @@
+.admin-theme .bg-indigo-600 { background-color: #c4662a; }
+.admin-theme .hover\:bg-indigo-700:hover { background-color: #a85122; }
+.admin-theme .text-indigo-600 { color: #1e3a1e; }
+.admin-theme .text-indigo-700 { color: #1e3a1e; }
+.admin-theme .border-indigo-200 { border-color: #d4cec0; }
+.admin-theme .bg-indigo-50 { background-color: #f8ede7; }
+.admin-theme .text-blue-600 { color: #1e3a1e; }
+.admin-theme .focus\:ring-indigo-500:focus { --tw-ring-color: #c4662a; }
+.admin-theme .bg-gray-50 { background-color: #f5f2eb; }
+.admin-theme .border-gray-200 { border-color: #e4ded2; }
+.admin-theme .rounded-xl { border-radius: 1rem; }

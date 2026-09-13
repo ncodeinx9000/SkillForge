@@ -6,10 +6,16 @@ import { useState } from "react";
 import { PiPlantThin } from "react-icons/pi";
 import { MdKeyboardArrowRight, MdKeyboardArrowLeft } from "react-icons/md";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { logout } from "../../../redux/userSlice";
+import { logoutUser } from "../../../lib/logout";
+import { MdOutlineLogout } from "react-icons/md";
+import { FiUser } from "react-icons/fi";
 
 function Sidebar({ showSidebar, setShowSidebar }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
 
   const navItems = [
     {
@@ -41,6 +47,11 @@ function Sidebar({ showSidebar, setShowSidebar }) {
       icon: FaArrowTrendUp,
       label: "My Progress",
       path: "/learner/my-progress",
+    },
+    {
+      icon: FiUser,
+      label: "My Profile",
+      path: "/learner/profile",
     },
   ];
 
@@ -151,6 +162,7 @@ function Sidebar({ showSidebar, setShowSidebar }) {
           );
         })}
       </nav>
+      <button type="button" onClick={async () => { await logoutUser(dispatch, logout); navigate("/login", { replace: true }); }} title={!showSidebar ? "Log out" : ""} className={`absolute bottom-4 ${showSidebar ? "left-3 right-3 justify-start px-3" : "left-2 right-2 justify-center px-2"} flex items-center gap-3 rounded-2xl py-3 text-sm font-semibold text-white hover:bg-[#2d4d2d]`}><MdOutlineLogout className="text-[19px]" />{showSidebar && "Log out"}</button>
     </aside>
   );
 }

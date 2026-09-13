@@ -1,5 +1,11 @@
 import  {Mentor}  from "../../models/mentor.model.js";
 import { LearnerProgress } from "../../models/learnerProgress.model.js";
+import { Session } from "../../models/session.model.js";
+import { Review } from "../../models/Review.model.js";
+import Question from "../../models/Question.model.js";
+import { Resource } from "../../models/resource.model.js";
+import { User } from "../../models/user.model.js";
+import { Notification } from "../../models/notification.model.js";
 
 // Create mentor profile
 export const createMentorProfile = async (req, res) => {
@@ -46,6 +52,18 @@ export const createMentorProfile = async (req, res) => {
             location,
             socialLinks,
         });
+
+        const admins = await User.find({ role: "admin", isActive: true }).select("_id");
+        if (admins.length) {
+            await Notification.insertMany(admins.map((admin) => ({
+                recipient: admin._id,
+                type: "system",
+                title: "New Mentor Verification Request",
+                message: "A mentor profile is waiting for review.",
+                relatedId: mentor._id,
+                relatedModel: null,
+            })));
+        }
 
         return res.status(201).json({
             success: true,
@@ -100,7 +118,7 @@ export const getMentorById = async (req, res) => {
     try {
         const { mentorId } = req.params;
 
-        const mentor = await Mentor.findById(mentorId)
+        const mentor = await Mentor.findOne({ _id: mentorId, verificationStatus: "verified" })
             .populate("user", "-password");
 
         if (!mentor) {
@@ -190,6 +208,12 @@ export const updateMentorProfile = async (req, res) => {
         if (location !== undefined) mentor.location = location;
         if (socialLinks !== undefined) mentor.socialLinks = socialLinks;
 
+        // A rejected profile must be reviewed again after the mentor updates it.
+        // The client never controls verification status.
+        if (mentor.verificationStatus === "rejected") {
+            mentor.verificationStatus = "pending";
+        }
+
         await mentor.save();
 
         return res.status(200).json({
@@ -230,7 +254,7 @@ export const getMyMentees = async (req, res) => {
             bookedMentor: mentor._id,
             status: "Active",
         })
-            .populate("learner", "name email profileImage")
+            .populate("learner", "name email profilePicture")
             .populate("businessIdea", "title category")
             .populate("roadmap", "title steps");
 
@@ -271,5 +295,25 @@ export const getMyMentees = async (req, res) => {
             success: false,
             message: error.message,
         });
+    }
+};
+
+export const getMentorAnalytics = async (req, res) => {
+    try {
+        const mentor = await Mentor.findOne({ user: req.userId });
+        if (!mentor) return res.status(404).json({ success: false, message: "Mentor profile not found" });
+        const [sessions, mentees, reviews, resources, unansweredQuestions] = await Promise.all([
+            Session.find({ mentor: mentor._id }).select("status"),
+            LearnerProgress.find({ bookedMentor: mentor._id, status: "Active" }).select("roadmapProgress learner"),
+            Review.find({ mentor: mentor._id }).select("rating"),
+            Resource.countDocuments({ createdBy: req.userId, isPublished: true }),
+            Question.countDocuments({ mentor: mentor._id, status: { $ne: "answered" } }),
+        ]);
+        const averageProgress = mentees.length ? Math.round(mentees.reduce((sum, item) => sum + (item.roadmapProgress || 0), 0) / mentees.length) : 0;
+        const averageRating = reviews.length ? Number((reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length).toFixed(1)) : 0;
+        return res.json({ success: true, analytics: { totalMentees: new Set(mentees.map((item) => item.learner.toString())).size, activeMentees: mentees.length, totalSessions: sessions.length, pendingSessions: sessions.filter((item) => item.status === "pending").length, confirmedSessions: sessions.filter((item) => item.status === "confirmed").length, completedSessions: sessions.filter((item) => item.status === "completed").length, rejectedSessions: sessions.filter((item) => item.status === "rejected").length, averageRating, totalReviews: reviews.length, averageProgress, resources, unansweredQuestions } });
+    } catch (error) {
+        console.error("Mentor analytics error:", error);
+        return res.status(500).json({ success: false, message: "Failed to load mentor analytics" });
     }
 };

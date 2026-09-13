@@ -194,12 +194,12 @@ function MentorOverview() {
 
                                     {/* Avatar */}
                                     {mentee.learner
-                                        ?.profileImage ? (
+                                        ?.profilePicture ? (
                                         <img
                                             src={
                                                 mentee
                                                     .learner
-                                                    .profileImage
+                                                    .profilePicture
                                             }
                                             alt={
                                                 learnerName
@@ -304,12 +304,12 @@ function MentorOverview() {
 
                                     {/* Avatar */}
                                     {session.learner
-                                        ?.profileImage ? (
+                                        ?.profilePicture ? (
                                         <img
                                             src={
                                                 session
                                                     .learner
-                                                    .profileImage
+                                                    .profilePicture
                                             }
                                             alt={
                                                 learnerName

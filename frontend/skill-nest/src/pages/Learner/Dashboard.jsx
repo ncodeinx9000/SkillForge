@@ -2,7 +2,7 @@ import { FiBookOpen } from "react-icons/fi";
 import { RxPeople } from "react-icons/rx";
 import { FaBullseye } from "react-icons/fa";
 import { LuBookMarked } from "react-icons/lu";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import WelcomeBanner from "../../components/Learner/LearnerDashboard/WelcomeBanner";
 import Navbar from "../../components/Learner/LearnerDashboard/Navbar";
 import Sidebar from "../../components/Learner/LearnerDashboard/Sidebar";
@@ -15,18 +15,19 @@ import LearningResources from "../../components/Learner/LearnerDashboard/Learnin
 import api from "../../lib/axios";
 
 export default function Dashboard() {
-
-  const getLearnerDashboard = async()=> {
-    try {
-       const res = await api.get("/learner/dashboard")
-    } catch (error) {
-      console.log(error);
-      
-    }
-  }
-
- 
   const [showSidebar, setShowSidebar] = useState(false);
+  const [dashboard, setDashboard] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api.get("/learner/dashboard")
+      .then((response) => setDashboard(response.data.dashboard))
+      .catch((requestError) => setError(requestError.response?.data?.message || "Unable to load dashboard."));
+  }, []);
+
+  const progress = dashboard?.roadmapProgress || 0;
+  const activeMentors = dashboard?.bookedMentor?.length || 0;
+  const resourceCount = dashboard?.completedResources || 0;
 
   return (
     <div className="bg-[#f5f2eb]  min-h-screen overflow-hidden">
@@ -38,7 +39,8 @@ export default function Dashboard() {
       <div
         className={`${showSidebar ? "lg:ml-61" : "lg:ml-26"} ml-6 mr-6 mt-23 lg:mr-6 `}
       >
-        <WelcomeBanner />
+        <WelcomeBanner dashboard={dashboard} />
+        {error && <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
         {/* Cards */}
         <div className="lg:grid lg:grid-cols-4 lg:gap-3 grid grid-cols-2 gap-3 mb-4">
@@ -46,15 +48,15 @@ export default function Dashboard() {
             icon={FaBullseye}
             iconColor="text-[#c2815b]"
             iconBgColor="bg-gray-200"
-            stats="49%"
+            stats={`${progress}%`}
             statName="Roadmap Progress"
-            weekStat="+12% this week"
+            weekStat="Live"
           />
           <StatsCard
             icon={LuBookMarked}
             iconColor="text-gray-800"
             iconBgColor="bg-gray-200"
-            stats="2"
+            stats={dashboard?.completedSteps || 0}
             statName="Interest Saved"
             weekStat=""
           />
@@ -62,31 +64,31 @@ export default function Dashboard() {
             icon={FiBookOpen}
             iconColor="text-blue-600"
             iconBgColor="bg-gray-200"
-            stats="7"
+            stats={resourceCount}
             statName="Resource Accessed"
-            weekStat="+2 today"
+            weekStat="Completed"
           />
 
           <StatsCard
             icon={RxPeople}
             iconColor="text-purple-600"
             iconBgColor="bg-gray-200"
-            stats="1"
+            stats={activeMentors}
             statName="Active Mentor"
             weekStat=""
           />
         </div>
 
         <div className="lg:grid lg:grid-cols-[1.7fr_1fr] lg:gap-4">
-          <ActiveRoadmap />
+          <ActiveRoadmap dashboard={dashboard} />
           <div className="flex flex-col gap-3">
-            <MentorCard />
-            <InterestCard />
+            <MentorCard dashboard={dashboard} />
+            <InterestCard dashboard={dashboard} />
           </div>
         </div>
         
         <RecommendedIdeas />
-        <LearningResources />
+        <LearningResources dashboard={dashboard} />
       </div>
     </div>
   );
